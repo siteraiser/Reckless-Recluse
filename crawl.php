@@ -27,8 +27,7 @@ Use Slash:<input type="checkbox" name="slash" <?php echo (@$_GET['slash']?'check
 Check External:<input type="checkbox" name="external" <?php echo (@$_GET['external']?'checked':'');?> value="1"><br>
 
 <div class="center-align">
-  <button class="btn waves-effect waves-light light-blue" type="submit">Crawlem!
-    <i class="material-icons right"></i>
+  <button type="submit">Crawlem!
   </button>
   </div>
   </form>
