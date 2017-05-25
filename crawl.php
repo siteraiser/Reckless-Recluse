@@ -45,7 +45,8 @@ use GraphAware\Neo4j\Client\ClientBuilder;
 //$this->client = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@172.76.227.199')->build(); // Example for HTTP connection configuration (port is optional)	
 
 $curl_timeout = @$_GET['download_timeout'];//seconds
-//$reqs = array("http://twitter.com/");//,"http://getpit.com/docs","http://getpit.com/docs/readme","http://getpit.com/docs/installation-instructions","http://getpit.com/docs/dev-notes","http://getpit.com/docs/reference","http://getpit.com/docs/reference/cms","http://getpit.com/docs/reference/mvc","http://getpit.com/blog","http://getpit.com/#","http://getpit.com/blog/news/whats-new-with-v2","http://getpit.com/blog/news/system-upgrade","http://getpit.com/privacy-policy","http://getpit.com/blog/info/summary","http://getpit.com/latest.php","http://getpit.com/#introduction","http://getpit.com/#articles","http://getpit.com/#pages","http://getpit.com/#categories","http://getpit.com/#menus","http://getpit.com/#examples","http://getpit.com/#mvc","http://getpit.com/#properties","http://getpit.com/#helpers","http://getpit.com/#system","http://getpit.com/#reserved","http://getpit.com/#routing","http://getpit.com/blog?page=2"); 
+	//manual entry of links to crawl
+//$reqs = array("http://twitter.com/");
 $crawl_level = 0;
 
 
