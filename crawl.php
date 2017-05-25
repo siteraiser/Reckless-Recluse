@@ -188,7 +188,7 @@ class crawlLinks {
 //	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
 //Add indexes...
 /* Get pages pointing to url:
-//MATCH (u1:Url)-[:references]-> (u2:Url { href: "http://www.siteraiser.com/customer-resources"}) return u1
+//MATCH (u1:Url)-[:references]-> (u2:Url { href: "http://www.example.com/customer-resources"}) return u1
 
 */	
 	
