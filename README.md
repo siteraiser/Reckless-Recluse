@@ -16,6 +16,6 @@ Below is an example of how to change crawl behavior to only crawl nav links and 
 
 $data['a'] = ['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
 
-And if you need to grab a few values in different forms, you could add in some more custom functionality, here's how to get the link and text (already included in the current script): 
+And if you need to grab a few values in different forms, you could add in some more custom functionality, here's how to get the link and text (already included in the current script, innertext will get the text from any node): 
 
 $data['mainlinks'] = ['main'=>['.//a'=>['href','innertext']]];
