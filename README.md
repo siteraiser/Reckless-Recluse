@@ -12,6 +12,6 @@ CREATE TABLE `crawl`.`crawled` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VA
 And just one Neo4j db. But you'll have to add a vendor folder with the php cypher extensions. Which can be found here: https://github.com/graphaware/neo4j-php-client
 
 After it's up and running, you can use xpath queries to choose what content to save into the database, also what will appear in the reports. 
-Example of how to change crawl behavior to only crawl nav links and links inside of a main element (the 'a' group is used to crawl urls, other groups will only show up in the page reports):
+Below is an example of how to change crawl behavior to only crawl nav links and links inside of a main element (the 'a' group is used to crawl urls, other groups will only show up in the page reports). The other gathered info will also be saved to the graph. 
 
 $data['a'] = ['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
