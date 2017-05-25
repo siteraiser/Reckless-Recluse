@@ -13,4 +13,5 @@ And just one Neo4j db. But you'll have to add a vendor folder with the php cyphe
 
 After it's up and running, you can use xpath queries to choose what content to save into the database, also what will appear in the reports. 
 Example of how to change crawl behavior to only crawl nav links inside of a main element:
+
 $data['a'] = ['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
