@@ -186,6 +186,75 @@ class crawlLinks {
 	
 	
 //	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
+function urlNotFoundInGraph($url){
+	$query = "MATCH (url { href:{url} }) RETURN url.href, count(url) as count";
+	$result = $this->client->run($query,["url"=>$url]);
+	if(count($result->getRecord())===0 ){
+		return true;
+	}else{
+		return false;
+	}
+}	
+
+	function truncateTable($table){
+		return $this->pdo->exec("TRUNCATE TABLE $table");
+	}	
+//	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
+
+function checkUrl($url)
+{
+	$this->i=0;
+	$this->data=[];
+	//$this->crawl=[];
+	$this->truncateTable('to_crawl');
+	//$this->data['a'] = ['body'=>['.//a'=>['href']]];
+	$this->four04s =[];
+	$this->redirected=[];
+	$this->redirectsTo =[];
+		
+    $this->makeRequests($url);
+	$this->setPagesWith404s();
+	$msg = (isset($this->four04s[0]) ?'notfound':'found');
+	if(rtrim($url[0], '/') !== parse_url($url[0], PHP_URL_SCHEME).'://'.parse_url($url[0], PHP_URL_HOST) && ! stristr( $url[0],'#',0) ){
+		$msg.= (isset($this->redirected[0])  ?' redirected':'');
+	}
+	return $msg;
+}
+
+function addUrl($pageUrl,$url){
+ if(stristr( $pageUrl,'#',0) || stristr( $url,'#',0)) {return;}
+	if(parse_url($pageUrl, PHP_URL_HOST) ==  parse_url($url, PHP_URL_HOST)){
+			$type = 'internal';
+		}else{
+			$type = 'external';
+	}
+	if($this->urlNotFoundInGraph($pageUrl)){
+		 if(parse_url($pageUrl, PHP_URL_HOST) == parse_url($this->start_url, PHP_URL_HOST)){
+			 $type = 'internal';
+		 }
+		 $query = "CREATE (url:Url { href: {pageUrl}, type:{type}})";
+		 $this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"type"=>$type]);
+	
+	}
+	if($this->urlNotFoundInGraph($url)){
+		 if(parse_url($url, PHP_URL_HOST) != parse_url($this->start_url, PHP_URL_HOST)){
+			 $type = 'external';
+		 }
+		 $query = "CREATE (url:Url { href: {url}, type:{type}})";
+		 $this->client->sendCypherQuery($query,["url"=>$url,"type"=>$type]);
+	}
+
+	$query = "MATCH (u1:Url { href: {pageUrl}}), (u2:Url { href: {url}}) 
+	CREATE (u1)-[:references]->(u2)";//unique
+	$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"url"=>$url]);
+
+}	
+
+
+function addAtts($pageUrl){
+		
+	
+//	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
 //Add indexes...
 /* Get pages pointing to url:
 //MATCH (u1:Url)-[:references]-> (u2:Url { href: "http://www.example.com/customer-resources"}) return u1
