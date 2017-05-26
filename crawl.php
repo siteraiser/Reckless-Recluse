@@ -541,14 +541,17 @@ $nodeID = $nodeID + 1;
 						
 							foreach($attributes as $attribute){	
 								
-								if($attribute=='innertext'){
-									$this->atts[$pageUrl][$group][$nodeID][$attribute] = $this->innerText($e);//$a2->nodeValue;    
+								if($attribute=='innertext'){ 
+									$str = $this->innerText($e);//$a2->nodeValue;    
+									$this->atts[$pageUrl][$group][$nodeID][$attribute] = utf8_decode(iconv(mb_detect_encoding($str), "UTF-8", $str)); 
 								}else if($attribute=='text'){
-									$this->atts[$pageUrl][$group][$nodeID][$attribute] = $e->nodeValue;    						
+									$str = $e->nodeValue;
+									
+									$this->atts[$pageUrl][$group][$nodeID][$attribute] = utf8_decode(iconv(mb_detect_encoding($str), "UTF-8", $str));   						
 								}else if($attribute == 'href'){//Make a fqurl
 								$url = $e->getAttribute($attribute);
 								//utf8_decode($e->getAttribute($attribute));
-								iconv(mb_detect_encoding($url), "UTF-8", $url);
+								$url = utf8_decode(iconv(mb_detect_encoding($url), "UTF-8", $url));
 									if(strpos($url, '#') === 0 || strpos($url, '?') === 0){ /* & group =='a' ..? */
 										
 										$path =parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST).	parse_url($pageUrl, PHP_URL_PATH);
@@ -577,8 +580,8 @@ $nodeID = $nodeID + 1;
 										
 									}
 								}else{
-									
-									$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] = $e->getAttribute($attribute); 
+									$str = $e->getAttribute($attribute);
+									$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] = utf8_decode(iconv(mb_detect_encoding($str), "UTF-8", $str)); 
 								}	
 								
 								
