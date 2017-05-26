@@ -546,7 +546,9 @@ $nodeID = $nodeID + 1;
 								}else if($attribute=='text'){
 									$this->atts[$pageUrl][$group][$nodeID][$attribute] = $e->nodeValue;    						
 								}else if($attribute == 'href'){//Make a fqurl
-								$url = utf8_decode($e->getAttribute($attribute));
+								$url = $e->getAttribute($attribute);
+								//utf8_decode($e->getAttribute($attribute));
+								iconv(mb_detect_encoding($url), "UTF-8", $url);
 									if(strpos($url, '#') === 0 || strpos($url, '?') === 0){ /* & group =='a' ..? */
 										
 										$path =parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST).	parse_url($pageUrl, PHP_URL_PATH);
