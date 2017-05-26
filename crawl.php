@@ -463,7 +463,7 @@ function stripHTML($html){
 			$base_href = $b->getAttribute('href');
 		}	
 		$charset = '';//base--href in header
-		foreach( $selector->query('(//meta[contains(attribute::charset, "utf-8")])') as $c){
+		foreach( $selector->query('(//meta[contains(attribute::charset, "*")])') as $c){ //utf-8
 			$charset = $c->getAttribute('charset');
 		}	
         foreach ($this->data as $group => $elements){  
@@ -604,6 +604,7 @@ $nodeID = $nodeID + 1;
 			
 	}
 function encodeURI($url) {
+	///https://stackoverflow.com/questions/4929584/encodeuri-in-php#6059053
     // http://php.net/manual/en/function.rawurlencode.php
     // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/encodeURI
     $unescaped = array(
