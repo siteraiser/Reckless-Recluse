@@ -414,7 +414,7 @@ function innerText($element)
 function stripHTML($html){
 
 
-		$html = str_replace(array('<span class="editcontent2">edit</span>','<span class="editcontent2">Edit</span>', '<span class="editcontent">sorting</span>', '<span class="editcontent">edit</span>'), '', $html);		
+		//$html = str_replace(array(''), '', $html);		
 		
 		$html = preg_replace('~<\s*\bscript\b[^>]*>(.*?)<\s*\/\s*script\s*>~is', '', $html);//remove scripts
 		$html = preg_replace('~<\s*\bstyle\b[^>]*>(.*?)<\s*\/\s*style\s*>~is', '', $html);
