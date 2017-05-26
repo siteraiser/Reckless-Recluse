@@ -39,7 +39,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
 use GraphAware\Neo4j\Client\ClientBuilder;
 //$this->client = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@172.76.227.199')->build(); // Example for HTTP connection configuration (port is optional)	
 $curl_timeout = @$_GET['download_timeout'];//seconds
-//$reqs = array("http://twitter.com/");//,"http://getpit.com/docs","http://getpit.com/docs/readme","http://getpit.com/docs/installation-instructions","http://getpit.com/docs/dev-notes","http://getpit.com/docs/reference","http://getpit.com/docs/reference/cms","http://getpit.com/docs/reference/mvc","http://getpit.com/blog","http://getpit.com/#","http://getpit.com/blog/news/whats-new-with-v2","http://getpit.com/blog/news/system-upgrade","http://getpit.com/privacy-policy","http://getpit.com/blog/info/summary","http://getpit.com/latest.php","http://getpit.com/#introduction","http://getpit.com/#articles","http://getpit.com/#pages","http://getpit.com/#categories","http://getpit.com/#menus","http://getpit.com/#examples","http://getpit.com/#mvc","http://getpit.com/#properties","http://getpit.com/#helpers","http://getpit.com/#system","http://getpit.com/#reserved","http://getpit.com/#routing","http://getpit.com/blog?page=2"); 
+//$reqs = array("http://example.com/");
 $crawl_level = 0;
  if(@$_GET['name'] !='') {
 	$reqs = array("{$_GET['name']}");
@@ -67,7 +67,7 @@ $data['mainlinks'] = ['main'=>['.//a'=>['href','innertext']]];
 //$data['footerlinks'] = ['footer'=>['.//a'=>['href']]];
 $data['IFrames'] = ['body'=>['.//iframe'=>['src']]];
 class StopWatch {
-//from github
+//from github https://gist.github.com/phybros/5766062
   private static $startTimes = array();
   public static function start($timerName = 'default'){
     self::$startTimes[$timerName] = microtime(true);
@@ -463,7 +463,7 @@ function stripHTML($html){
 			$base_href = $b->getAttribute('href');
 		}	
 		$charset = '';//base--href in header
-		foreach( $selector->query('(//meta[contains(attribute::charset, "*")])') as $c){ //utf-8
+		foreach( $selector->query('(//meta[contains(attribute::charset, "*")])') as $c){
 			$charset = $c->getAttribute('charset');
 		}	
         foreach ($this->data as $group => $elements){  
@@ -604,7 +604,6 @@ $nodeID = $nodeID + 1;
 			
 	}
 function encodeURI($url) {
-	///https://stackoverflow.com/questions/4929584/encodeuri-in-php#6059053
     // http://php.net/manual/en/function.rawurlencode.php
     // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/encodeURI
     $unescaped = array(
