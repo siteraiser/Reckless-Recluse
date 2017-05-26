@@ -584,7 +584,7 @@ $nodeID = $nodeID + 1;
 								//Add nodes to graph
 								if($attribute == 'href' && $group =='a'){
 									
-									echo $final_value = $this->addSlash($final_value);
+									$final_value = $this->addSlash($final_value);
 									$this->ahrefs[$pageUrl][] = $final_value;// for filtering
 									//force slash one way or another
 									
