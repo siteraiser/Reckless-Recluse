@@ -2,17 +2,14 @@
 /*	Copyright © 2017 
 	
 	This file is part of Reckless Recluse.
-
     Reckless Recluse is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-
     Reckless Recluse is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with Reckless Recluse.  If not, see <http://www.gnu.org/licenses/>.
 */?>
@@ -36,19 +33,14 @@ Check External:<input type="checkbox" name="external" <?php echo (@$_GET['extern
 
 
 <?php
-
-
 ini_set('max_execution_time', $maxextime = 1800); //seconds
 ini_set('memory_limit','2048M');//2048M4096M
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
 use GraphAware\Neo4j\Client\ClientBuilder;
 //$this->client = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@172.76.227.199')->build(); // Example for HTTP connection configuration (port is optional)	
-
 $curl_timeout = @$_GET['download_timeout'];//seconds
 //$reqs = array("http://twitter.com/");//,"http://getpit.com/docs","http://getpit.com/docs/readme","http://getpit.com/docs/installation-instructions","http://getpit.com/docs/dev-notes","http://getpit.com/docs/reference","http://getpit.com/docs/reference/cms","http://getpit.com/docs/reference/mvc","http://getpit.com/blog","http://getpit.com/#","http://getpit.com/blog/news/whats-new-with-v2","http://getpit.com/blog/news/system-upgrade","http://getpit.com/privacy-policy","http://getpit.com/blog/info/summary","http://getpit.com/latest.php","http://getpit.com/#introduction","http://getpit.com/#articles","http://getpit.com/#pages","http://getpit.com/#categories","http://getpit.com/#menus","http://getpit.com/#examples","http://getpit.com/#mvc","http://getpit.com/#properties","http://getpit.com/#helpers","http://getpit.com/#system","http://getpit.com/#reserved","http://getpit.com/#routing","http://getpit.com/blog?page=2"); 
 $crawl_level = 0;
-
-
  if(@$_GET['name'] !='') {
 	$reqs = array("{$_GET['name']}");
  }	else {
@@ -60,39 +52,30 @@ $crawl_level = 0;
 	// $crawl_level = ($_GET['levels'] > 2 ? 3:$_GET['levels']) ;
 	$crawl_level = ($_GET['levels'] ? $_GET['levels'] : 0) ;
  }
-
 //https://www.w3.org/TR/xpath/#path-abbrev https://www.w3.org/TR/xpath/#location-paths
 $data['title'] = ['head'=>['//title'=>['text']]];
 $data['description'] = ['head'=>['//meta[contains(attribute::name, "description")]'=>['content']]];
 $data['keywords'] = ['head'=>['//meta[contains(attribute::name, "keywords")]'=>['content']]];
-
 //$data['script'] = ['query'=>['//script[contains(attribute::type, "application/ld+json")]'=>['innertext']]];
-
 $data['a'] = ['body'=>['.//a'=>['href']]];//['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
-
 //$data['mobile'] = ['head'=>['//link[contains(attribute::rel, "alternate")]'=>['href']]];
 //$data['canonical'] = ['head'=>['//link[contains(attribute::rel, "canonical")]'=>['href']]];
-
 //$data['headerlinks'] = ['header'=>['.//a'=>['href']]];
 //$data['navlinks'] = ['nav'=>['.//a'=>['href']]];//$data['navlinks'] = ['nav[0]'=>['.//a'=>['href']]]; // or maybe  nav[position()=5]
 $data['mainlinks'] = ['main'=>['.//a'=>['href','innertext']]];
 //$data['asidelinks'] = ['aside'=>['.//a'=>['href','innertext']]];
 //$data['footerlinks'] = ['footer'=>['.//a'=>['href']]];
 $data['IFrames'] = ['body'=>['.//iframe'=>['src']]];
-
 class StopWatch {
 //from github
   private static $startTimes = array();
-
   public static function start($timerName = 'default'){
     self::$startTimes[$timerName] = microtime(true);
   }
-
   public static function elapsed($timerName = 'default'){
     return microtime(true) - self::$startTimes[$timerName];
   }
 }
-
 class crawlLinks {  
 	private $client;// neo4j
 	private $pdo;
@@ -104,7 +87,6 @@ class crawlLinks {
     public $atts=[];
   
 	public $capture = 'all';//all or null for default domain only, no 404s..
-
 	public $i=0;//levels 
 	public $four04s=[];
 	public $redirected=[];
@@ -125,15 +107,12 @@ class crawlLinks {
 			print "Error!: " . $e->getMessage() . "<br/>";
 			die();
 		}
-
 	}
-
 	
 //MySql-----------	
 	function inDB($table,$url){
 		$stmt =$this->pdo->prepare("SELECT * FROM $table WHERE url = ?");
 		$stmt->execute(array($url));
-
 		$res = $stmt->fetch(PDO::FETCH_ASSOC);
 		
 		if(!empty($res)){
@@ -168,7 +147,6 @@ class crawlLinks {
 		$urls=[];
 		$stmt =$this->pdo->prepare("SELECT * FROM $table ORDER BY id");
 		$stmt->execute(array());
-
 		$rows=$stmt->fetchAll(PDO::FETCH_ASSOC);
 			foreach($rows as $row){
 				$urls[] = $row['url'];
@@ -195,19 +173,15 @@ function urlNotFoundInGraph($url){
 		return false;
 	}
 }	
-
 	function truncateTable($table){
 		return $this->pdo->exec("TRUNCATE TABLE $table");
 	}	
 //	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
-
 function checkUrl($url)
 {
 	$this->i=0;
 	$this->data=[];
-
 	$this->truncateTable('to_crawl');
-
 	$this->four04s =[];
 	$this->redirected=[];
 	$this->redirectsTo =[];
@@ -220,7 +194,6 @@ function checkUrl($url)
 	}
 	return $msg;
 }
-
 function addUrl($pageUrl,$url){
  if(stristr( $pageUrl,'#',0) || stristr( $url,'#',0)) {return;}
 	if(parse_url($pageUrl, PHP_URL_HOST) ==  parse_url($url, PHP_URL_HOST)){
@@ -243,14 +216,10 @@ function addUrl($pageUrl,$url){
 		 $query = "CREATE (url:Url { href: {url}, type:{type}})";
 		 $this->client->sendCypherQuery($query,["url"=>$url,"type"=>$type]);
 	}
-
 	$query = "MATCH (u1:Url { href: {pageUrl}}), (u2:Url { href: {url}}) 
 	CREATE (u1)-[:references]->(u2)";//unique
 	$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"url"=>$url]);
-
 }	
-
-
 function addAtts($pageUrl){
 	
 	
@@ -258,7 +227,6 @@ function addAtts($pageUrl){
 //Add indexes...
 /* Get pages pointing to url:
 //MATCH (u1:Url)-[:references]-> (u2:Url { href: "http://www.siteraiser.com/customer-resources"}) return u1
-
 */	
 	
 	if(1){
@@ -302,10 +270,8 @@ function addAtts($pageUrl){
 			}	
 		}
 	}
-
 		
 }
-
 function getPageList($type='internal'){
 	
 		$urls=[];
@@ -317,9 +283,6 @@ function getPageList($type='internal'){
 		}
 		return $urls;
 }
-
-
-
 function getAttList($pageUrl,$exclude=''){
 	
 	$attsList=[];
@@ -328,15 +291,12 @@ function getAttList($pageUrl,$exclude=''){
 	MATCH (u:Url{href:{pageUrl}})-[r1:has_group]->(g)-[r2:has_item]->(i) RETURN g.group AS groupname,i.itemID AS iid ORDER BY i.itemID";
 	$result = $this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl]);
 	foreach ($result->getRecords() as $record) {
-
 		$attsList[$record->value('groupname')][] = $record->value('iid');
 	}
 	
 	$attsListO=[];
 	foreach ($this->data as $orderedgroup => $g){
-
 		foreach ($attsList as $group => $g2){
-
 		if($orderedgroup == $group){			
 				$attsListO[$orderedgroup] = $g2;
 			}	
@@ -370,22 +330,18 @@ function getAttList($pageUrl,$exclude=''){
 		$this->truncateTable('urls_captured');
 		$this->truncateTable('to_crawl');
 		$this->truncateTable('crawled');
-
-
 		
 		
 		
 		$query = "MATCH (n)
 		DETACH DELETE n";
 		$result = $this->client->run($query);
-
 		if(count($result->getRecord())===0 ){
 			return true;
 		}else{
 			return false;
 		}
 	}
-
 	function listByRelCount(){
 		$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
 		WITH n, count(r) as c
@@ -406,14 +362,11 @@ function setPagesWith404s(){
 		$query = "MATCH (u { href:{url} }) SET u.is404 = '1'";	
 		$this->client->sendCypherQuery($query,["url"=>$url]);			
 	}
-
 	foreach($this->redirected as $url){
 		$query = "MATCH (u { href:{url} }) SET u.redirected = '1'";	
 		$this->client->sendCypherQuery($query,["url"=>$url]);			
 	}
 }
-
-
 function getPagesWith404s(){
 	$this->setPagesWith404s();
 	$query = "MATCH (n:Url { is404: '1'})<-[r]-(n2:Url)
@@ -421,17 +374,14 @@ function getPagesWith404s(){
 	RETURN n.href, n2.href, c
 	ORDER BY c DESC
 	LIMIT 50";
-
 	echo'<br>Pages containing 404s';
 	$result = $this->client->sendCypherQuery($query);
-
 	foreach ($result->getRecords() as $record) {
 		echo '<br> 404: '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
 	}
 		
 	
 }	
-
 function getPagesWithExternal404s(){
 	
 	$query = "MATCH (n:Url { is404: '1'})<-[r]-(n2:Url) WHERE n.type = 'external' AND n2.type = 'internal'
@@ -439,10 +389,8 @@ function getPagesWithExternal404s(){
 	RETURN n.href, n2.href, c
 	ORDER BY c DESC
 	LIMIT 50";
-
 	echo'<br>Pages containing 404s';
 	$result = $this->client->sendCypherQuery($query);
-
 	foreach ($result->getRecords() as $record) {
 		echo '<br> 404: '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
 	}
@@ -451,26 +399,20 @@ function getPagesWithExternal404s(){
 	RETURN n.href, n2.href, c
 	ORDER BY c DESC
 	LIMIT 50";
-
 	echo'<br>Pages containing redirected urls';
 	$result = $this->client->sendCypherQuery($query);
-
 	foreach ($result->getRecords() as $record) {
 		echo '<br> URL is a redirect and : '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
 	}
 	
 }	
-
 function innerHTML($element)
 {
     $doc = $element->ownerDocument;
-
     $html = '';
-
     foreach ($element->childNodes as $node) {
         $html .= $doc->saveHTML($node);
     }
-
     return $html;
 }
 	 
@@ -481,8 +423,6 @@ function innerText($element)
 }
 	 
 function stripHTML($html){
-
-
 		//$html = str_replace(array(''), '', $html);		
 		
 		$html = preg_replace('~<\s*\bscript\b[^>]*>(.*?)<\s*\/\s*script\s*>~is', '', $html);//remove scripts
@@ -501,10 +441,8 @@ function stripHTML($html){
 		$content1=strip_tags($html);	
 		$order = array("\r\n", "\n", "\r","&nbsp;");
 		$replace = ' ';
-
 		// Processes \r\n's first so they aren't converted twice.
 		$content1 = str_replace($order, $replace, $content1);
-
 				
 		return $content1;
 }	 
@@ -512,7 +450,6 @@ function stripHTML($html){
 	 
     function getAtts($html,$pageUrl){
  
-
  $nodeID=0;
  
         $doc = new DOMDocument();
@@ -525,8 +462,10 @@ function stripHTML($html){
 		foreach( $selector->query('(//base)') as $b){
 			$base_href = $b->getAttribute('href');
 		}	
-		
-		
+		$charset = '';//base--href in header
+		foreach( $selector->query('(//meta[contains(attribute::charset, "utf-8")])') as $c){
+			$charset = $c->getAttribute('charset');
+		}	
         foreach ($this->data as $group => $elements){  
 		
 			foreach($elements as $elem => $atts){		
@@ -543,15 +482,15 @@ $nodeID = $nodeID + 1;
 								
 								if($attribute=='innertext'){ 
 									$str = $this->innerText($e);//$a2->nodeValue;    
-									$this->atts[$pageUrl][$group][$nodeID][$attribute] = utf8_decode(iconv(mb_detect_encoding($str), "UTF-8", $str)); 
+									$this->atts[$pageUrl][$group][$nodeID][$attribute] = (strtolower($charset) == 'utf-8'? $str :  utf8_decode($str));
 								}else if($attribute=='text'){
 									$str = $e->nodeValue;
 									
-									$this->atts[$pageUrl][$group][$nodeID][$attribute] = utf8_decode(iconv(mb_detect_encoding($str), "UTF-8", $str));   						
+									$this->atts[$pageUrl][$group][$nodeID][$attribute] = (strtolower($charset) == 'utf-8'? $str :  utf8_decode($str));					
 								}else if($attribute == 'href'){//Make a fqurl
 								$url = $e->getAttribute($attribute);
 								//utf8_decode($e->getAttribute($attribute));
-								$url = utf8_decode(iconv(mb_detect_encoding($url), "UTF-8", $url));
+								$url =  (strtolower($charset) == 'utf-8'? $url :  utf8_decode($url));
 									if(strpos($url, '#') === 0 || strpos($url, '?') === 0){ /* & group =='a' ..? */
 										
 										$path =parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST).	parse_url($pageUrl, PHP_URL_PATH);
@@ -581,7 +520,7 @@ $nodeID = $nodeID + 1;
 									}
 								}else{
 									$str = $e->getAttribute($attribute);
-									$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] = utf8_decode(iconv(mb_detect_encoding($str), "UTF-8", $str)); 
+									$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] =(strtolower($charset) == 'utf-8'? $str :  utf8_decode($str));
 								}	
 								
 								
@@ -606,7 +545,6 @@ $nodeID = $nodeID + 1;
 		/* Set attributes into neo4j */	
 		
 			
-
 		$this->addAtts($pageUrl);
 				
 		
@@ -626,7 +564,6 @@ $nodeID = $nodeID + 1;
 		return true;	
 	}
 	public function exclude_dirs($url){ //robot.txt exclude (not completed yet)
-
 		foreach($this->exclude_dirs as $dir){
 			if(substr( $url , 0, strlen($dir) ) === $dir){
 				return false;
@@ -681,22 +618,16 @@ function encodeURI($url) {
         '%23'=>'#'
     );
     return strtr(rawurlencode($url), array_merge($reserved,$unescaped,$score));
-
 }
 	public function sendRequest($pageUrl){	
-
 			
 		$httpCode ='';
 		$buf = '';
-
 		$ch = curl_init();
-
 		curl_setopt($ch, CURLOPT_USERAGENT, $this->uagent);
 		curl_setopt($ch,CURLOPT_SSLVERSION, 6);
 		curl_setopt($ch, CURLOPT_URL,$this->encodeURI($pageUrl));
-
 		curl_setopt($ch, CURLOPT_COOKIEFILE, "");
-
 		if( stristr( strtolower( $pageUrl),'.pdf',0) && stristr( strtolower( $pageUrl),'.jpg',0) && stristr( strtolower( $pageUrl),'.png',0)){	
 		    curl_setopt($ch, CURLOPT_HEADER,         true);
 			curl_setopt($ch, CURLOPT_NOBODY,         true); 					
@@ -709,7 +640,6 @@ function encodeURI($url) {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-
 		$buf = curl_exec($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);				
 		$redirect_url = curl_getinfo($ch,CURLINFO_REDIRECT_URL);//CURLINFO_EFFECTIVE_URL -> for curl follow loca... 
@@ -730,7 +660,6 @@ function encodeURI($url) {
 		
 		
     function makeRequests($urls){
-
 		$first_run=0;
 		
 		if($this->start_url == ''){
@@ -746,16 +675,13 @@ function encodeURI($url) {
 	
 	
         foreach ($urls as $pageUrl) {   
-
 		
 			$pageUrl = $this->addSlash($pageUrl);
 		
 			ob_end_flush();
 			ob_start();
 			ob_implicit_flush();		
-
 			echo $pageUrl .'<br>';	
-
 			ob_flush();
 			flush();
 			
@@ -767,7 +693,6 @@ $this->addUrlToTable('crawled',$pageUrl);
 			$page = $this->sendRequest($pageUrl);		
 			$final_url = $page['final_url'];
 			$final_url = $this->addSlash($final_url);
-
 			$httpCode = $page['http_code'];			
 			$buffer = $page['buffer'];
 			
@@ -802,14 +727,11 @@ $this->addUrlToTable('crawled',$pageUrl);
 				$this->getAtts($buffer,$pageUrl);    
 			}
         }
-
 /*
 CREATE TABLE `crawl`.`urls_captured` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`to_crawl` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`crawled` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
-
 */
-
 //urlsCaptured is prefigured
 //Filter urls
 		//$this->crawl =[];
@@ -872,63 +794,39 @@ $this->ahrefs=[];
 	
 	
 }
-
-
-
 $StopWatch = new StopWatch();
 StopWatch::start();
-
-
 $Crawl = new crawlLinks();
  
 $Crawl->clear(); //clear graph & mySql
-
 echo '<h3>Level: '.$Crawl->i=$crawl_level.'</h3>';
-
 $Crawl->curl_timeout = $curl_timeout;
 $Crawl->data = $data;
 $Crawl->slash_only = (@$_GET['slash']?true:false);
-
-
 $Crawl->makeRequests($reqs);
-
-
 echo sprintf("Execution time: %s seconds - (Max $maxextime)", StopWatch::elapsed());
-
 $Crawl->getPagesWith404s();
 Echo'<hr>';
 $Crawl->listByRelCount();
-
-
-
 $pageUrls = $Crawl->getPageList($type = 'internal');
 foreach($pageUrls as $pageUrl){
 $atts[$pageUrl] = $Crawl->getAttList($pageUrl);
 }
-
-
-
  foreach($atts as $url => $tags){
-
     echo'<h1>Url: '.$url.'</h1>Jump to:';
     foreach($tags as $tag => $elems){
         echo'<a href="#'.$tag.$url.'"> '.$tag.'</a> - ';
     }
-
     foreach($tags as $tag => $elems){
 		
 		if($tag !='a'){
 			echo'<div id="'.$tag.$url.'" class="tag"><h2>Group: '.$tag.'</h2>';
-
 			foreach($elems as $elem){
 				
 				echo '<div>';
 				foreach($elem as $key => $attr){
-
 					if( stristr( $attr,'youtube.com',0) || $tag !='IFrames' ){                      
-
 						echo '<div>'.$key.' : '. $attr . '</div>';               
-
 					}
 				}
 				echo'</div>';
@@ -938,55 +836,45 @@ $atts[$pageUrl] = $Crawl->getAttList($pageUrl);
     }
     echo'<br><br>'; 
 }
-
  
 unset($atts);
  
-
 ?>
 <div style="position:fixed; right:0px;top:10px;">
 <a href="#crawl">crawl</a> - <a href="#urlsCrawled">urlsCrawled</a> - <a href="#urlsCaptured">urlsCaptured</a> - <a href="#four04s">four04s</a> - <a href="#redirected">redirected</a> - <a href="#external">external</a>
 </div>
 <h2 id="crawl">To Crawl</h2><div>
 <?php
-
 foreach($Crawl->GetUrls('to_crawl') as $url){
 	echo  '<div>'.$url.'</div>';	
 }
-
 ?>
 </div>
 
 
 <h2 id="urlsCrawled">urlsCrawled</h2><div>
 <?php
-
 foreach($Crawl->GetUrls('crawled') as $url){
 	echo  '<div><a href='.$url.'>'.$url.'</a></div>';	
 }
-
 ?>
 </div>
 
 
 <h2 id="urlsCaptured">urlsCaptured</h2><div>
 <?php
-
 foreach($Crawl->GetUrls('urls_captured') as $url){
 	echo  '<div>'.$url.'</div>';	
 }
-
 ?>
 </div>
 
 
 <h2 id="four04s">four04s</h2><div>
 <?php
-
 foreach($Crawl->four04s as $url){
 	echo  '<div>'.$url.'</div>';	
 }
-
 ?>
 </div>
 
@@ -995,33 +883,25 @@ foreach($Crawl->four04s as $url){
  echo '<pre>';
 echo htmlspecialchars(print_r($Crawl->redirectsTo, true));
 echo '</pre>';
-
-
 ?>
 </div>
 
 <h2 id="otherErrors">otherErrors</h2><div>
 <?php
-
 foreach($Crawl->otherErrors as $err_code => $url){
 	echo  '<div>'.$err_code.'--'.$url.'</div>';	
 }
-
 ?>
 </div>
 
 <h2 id="external">external</h2><div>
 <?php
-
-
 if(@$_GET['external']){
-
 	$host = parse_url($Crawl->start_url, PHP_URL_HOST);
 	foreach($Crawl->GetUrls('urls_captured') as $url){	
 		if($host != parse_url($url, PHP_URL_HOST)){
 			
 			StopWatch::start();
-
 			
 			
 			if(stristr( $url,'#',0)){
@@ -1032,7 +912,6 @@ if(@$_GET['external']){
 			$url = $Crawl->addSlash($url);
 			
 			if($url !=''){
-
 				echo  '<div><a href='.$url.'>'.$url.'</a> '. $Crawl->checkUrl([$url]).'</div>';		 
 			
 				echo '<pre>';
@@ -1047,7 +926,6 @@ if(@$_GET['external']){
 	$Crawl->getPagesWithExternal404s();
 	
 }
-
 ?> 
 </div>
 
@@ -1059,4 +937,3 @@ div.tag > div {border: solid 1px #777;}
 </style>
 </body>
 </html>
-
