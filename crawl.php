@@ -27,7 +27,8 @@ Use Slash:<input type="checkbox" name="slash" <?php echo (@$_GET['slash']?'check
 Check External:<input type="checkbox" name="external" <?php echo (@$_GET['external']?'checked':'');?> value="1"><br>
 
 <div class="center-align">
-  <button type="submit">Crawlem!
+  <button class="btn waves-effect waves-light light-blue" type="submit">Crawlem!
+    <i class="material-icons right"></i>
   </button>
   </div>
   </form>
@@ -44,8 +45,7 @@ use GraphAware\Neo4j\Client\ClientBuilder;
 //$this->client = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@172.76.227.199')->build(); // Example for HTTP connection configuration (port is optional)	
 
 $curl_timeout = @$_GET['download_timeout'];//seconds
-	//manual entry of links to crawl
-//$reqs = array("http://twitter.com/");
+//$reqs = array("http://twitter.com/");//,"http://getpit.com/docs","http://getpit.com/docs/readme","http://getpit.com/docs/installation-instructions","http://getpit.com/docs/dev-notes","http://getpit.com/docs/reference","http://getpit.com/docs/reference/cms","http://getpit.com/docs/reference/mvc","http://getpit.com/blog","http://getpit.com/#","http://getpit.com/blog/news/whats-new-with-v2","http://getpit.com/blog/news/system-upgrade","http://getpit.com/privacy-policy","http://getpit.com/blog/info/summary","http://getpit.com/latest.php","http://getpit.com/#introduction","http://getpit.com/#articles","http://getpit.com/#pages","http://getpit.com/#categories","http://getpit.com/#menus","http://getpit.com/#examples","http://getpit.com/#mvc","http://getpit.com/#properties","http://getpit.com/#helpers","http://getpit.com/#system","http://getpit.com/#reserved","http://getpit.com/#routing","http://getpit.com/blog?page=2"); 
 $crawl_level = 0;
 
 
@@ -183,7 +183,7 @@ class crawlLinks {
 	
 //Neo4j-----------	
 	
-	
+		
 	
 //	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
 function urlNotFoundInGraph($url){
@@ -205,9 +205,9 @@ function checkUrl($url)
 {
 	$this->i=0;
 	$this->data=[];
-	//$this->crawl=[];
+
 	$this->truncateTable('to_crawl');
-	//$this->data['a'] = ['body'=>['.//a'=>['href']]];
+
 	$this->four04s =[];
 	$this->redirected=[];
 	$this->redirectsTo =[];
@@ -252,12 +252,12 @@ function addUrl($pageUrl,$url){
 
 
 function addAtts($pageUrl){
-		
+	
 	
 //	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
 //Add indexes...
 /* Get pages pointing to url:
-//MATCH (u1:Url)-[:references]-> (u2:Url { href: "http://www.example.com/customer-resources"}) return u1
+//MATCH (u1:Url)-[:references]-> (u2:Url { href: "http://www.siteraiser.com/customer-resources"}) return u1
 
 */	
 	
@@ -546,30 +546,30 @@ $nodeID = $nodeID + 1;
 								}else if($attribute=='text'){
 									$this->atts[$pageUrl][$group][$nodeID][$attribute] = $e->nodeValue;    						
 								}else if($attribute == 'href'){//Make a fqurl
-									
-									if(strpos($e->getAttribute($attribute), '#') === 0 || strpos($e->getAttribute($attribute), '?') === 0){ /* & group =='a' ..? */
+								$url = utf8_decode($e->getAttribute($attribute));
+									if(strpos($url, '#') === 0 || strpos($url, '?') === 0){ /* & group =='a' ..? */
 										
 										$path =parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST).	parse_url($pageUrl, PHP_URL_PATH);
 										if($base_href != ''){
 											$path = $base_href;
 										}
-										$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] = $path.$e->getAttribute($attribute);    
+										$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] = $path.$url;    
 									}else{
 										//if starts with slash
-										if(strpos($e->getAttribute($attribute), '/') === 0 ){								
+										if(strpos($url, '/') === 0 ){								
 												$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute]  = parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST) . $e->getAttribute($attribute);    											
 										
 										}else{ // Does not start with /, # or ? 
-											if(parse_url($e->getAttribute($attribute), PHP_URL_SCHEME).	'://'.	parse_url($e->getAttribute($attribute), PHP_URL_HOST) == '://'){
+											if(parse_url($url, PHP_URL_SCHEME).	'://'.	parse_url($url, PHP_URL_HOST) == '://'){
 											//Doesn't have a host in href	
 												if($base_href != ''){
-													$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute]  = rtrim($base_href, '/'). '/'.$e->getAttribute($attribute); 
+													$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute]  = rtrim($base_href, '/'). '/'.$url; 
 												}else{
-													$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute]  = parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST) . '/' .$e->getAttribute($attribute);    											
+													$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute]  = parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST) . '/' .$url;    											
 												}
 											}else{
 												//is a full url normal
-												$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] = $e->getAttribute($attribute); 
+												$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] = $url; 
 											}
 										}	
 										
@@ -580,11 +580,11 @@ $nodeID = $nodeID + 1;
 								}	
 								
 								
-							
+								
 								//Add nodes to graph
 								if($attribute == 'href' && $group =='a'){
 									
-									$final_value = $this->addSlash($final_value);
+									echo $final_value = $this->addSlash($final_value);
 									$this->ahrefs[$pageUrl][] = $final_value;// for filtering
 									//force slash one way or another
 									
@@ -661,9 +661,25 @@ $nodeID = $nodeID + 1;
 			}
 			
 	}
-	
+function encodeURI($url) {
+    // http://php.net/manual/en/function.rawurlencode.php
+    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/encodeURI
+    $unescaped = array(
+        '%2D'=>'-','%5F'=>'_','%2E'=>'.','%21'=>'!', '%7E'=>'~',
+        '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'
+    );
+    $reserved = array(
+        '%3B'=>';','%2C'=>',','%2F'=>'/','%3F'=>'?','%3A'=>':',
+        '%40'=>'@','%26'=>'&','%3D'=>'=','%2B'=>'+','%24'=>'$'
+    );
+    $score = array(
+        '%23'=>'#'
+    );
+    return strtr(rawurlencode($url), array_merge($reserved,$unescaped,$score));
+
+}
 	public function sendRequest($pageUrl){	
-			
+
 			
 		$httpCode ='';
 		$buf = '';
@@ -672,7 +688,7 @@ $nodeID = $nodeID + 1;
 
 		curl_setopt($ch, CURLOPT_USERAGENT, $this->uagent);
 		curl_setopt($ch,CURLOPT_SSLVERSION, 6);
-		curl_setopt($ch, CURLOPT_URL, $pageUrl);
+		curl_setopt($ch, CURLOPT_URL,$this->encodeURI($pageUrl));
 
 		curl_setopt($ch, CURLOPT_COOKIEFILE, "");
 
@@ -699,8 +715,11 @@ $nodeID = $nodeID + 1;
 		if($httpCode == 200 || $httpCode > 400){				
 			return ['buffer'=>$buf,'final_url'=>$pageUrl,'http_code'=>$httpCode];		
 		} 
-		if(isset($redirect_url)){			
+		if(isset($redirect_url) && $httpCode != 0){		
+		
 			return $this->sendRequest($redirect_url);	
+		}else{	
+			return ['buffer'=>$buf,'final_url'=>$pageUrl,'http_code'=>$httpCode];	
 		}
 	}
 		
