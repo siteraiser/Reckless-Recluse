@@ -575,7 +575,7 @@ $nodeID = $nodeID + 1;
 		
 		return true;	
 	}
-	public function exclude_dirs($url){ //robot.txt exclude (not completed yet)
+	public function exclude_dirs($url){ // exclude directory (robot.txt check not completed yet)
 		foreach($this->exclude_dirs as $dir){
 			if(substr( $url , 0, strlen($dir) ) === $dir){
 				return false;
