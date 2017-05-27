@@ -463,8 +463,15 @@ function stripHTML($html){
 			$base_href = $b->getAttribute('href');
 		}	
 		$charset = '';//base--href in header
+		foreach( $selector->query('(//meta[contains(attribute::http-equiv, "Content-Type")])') as $c){
+			$ctype = $c->getAttribute('content');
+			$charArray = explode(';',$charset);
+			if(in_array('charset=utf-8',$charArray)){
+				$charset = 'utf-8';
+			}
+		}
 		foreach( $selector->query('(//meta[contains(attribute::charset, "*")])') as $c){
-			$charset = $c->getAttribute('charset');
+			$charset = strtolower($c->getAttribute('charset'));
 		}	
         foreach ($this->data as $group => $elements){  
 		
