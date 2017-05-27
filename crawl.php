@@ -466,9 +466,14 @@ function stripHTML($html){
 		foreach( $selector->query('(//meta[contains(attribute::http-equiv, "Content-Type")])') as $c){
 			$ctype = $c->getAttribute('content');
 			$charArray = explode(';',$charset);
-			if(in_array('charset=utf-8',$charArray)){
-				$charset = 'utf-8';
+			foreach($charArray as $val){
+				$check = trim($val);
+				$check = strtolower($check);
+				if($check == 'charset=utf-8'){
+					$charset = 'utf-8';					
+				}			
 			}
+
 		}
 		foreach( $selector->query('(//meta[contains(attribute::charset, "*")])') as $c){
 			$charset = strtolower($c->getAttribute('charset'));
