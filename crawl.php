@@ -489,11 +489,11 @@ $nodeID = $nodeID + 1;
 								
 								if($attribute=='innertext'){ 
 									$str = $this->innerText($e);//$a2->nodeValue;    
-									$this->atts[$pageUrl][$group][$nodeID][$attribute] = (strtolower($charset) == 'utf-8'? $str :  utf8_decode($str));
+									$this->atts[$pageUrl][$group][$nodeID][$attribute] = ($charset == 'utf-8'? $str :  utf8_decode($str));
 								}else if($attribute=='text'){
 									$str = $e->nodeValue;
 									
-									$this->atts[$pageUrl][$group][$nodeID][$attribute] = (strtolower($charset) == 'utf-8'? $str :  utf8_decode($str));					
+									$this->atts[$pageUrl][$group][$nodeID][$attribute] = ($charset == 'utf-8'? $str :  utf8_decode($str));					
 								}else if($attribute == 'href'){//Make a fqurl
 								$url = $e->getAttribute($attribute);
 								//utf8_decode($e->getAttribute($attribute));
@@ -527,7 +527,7 @@ $nodeID = $nodeID + 1;
 									}
 								}else{
 									$str = $e->getAttribute($attribute);
-									$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] =(strtolower($charset) == 'utf-8'? $str :  utf8_decode($str));
+									$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] =($charset == 'utf-8'? $str :  utf8_decode($str));
 								}	
 								
 								
