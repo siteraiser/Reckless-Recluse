@@ -250,6 +250,7 @@ if(($page + 1) == $i){
 </html>
 
 ---------- OR With Search------------
+
 <?php 
 
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
@@ -259,17 +260,20 @@ use GraphAware\Neo4j\Client\ClientBuilder;
 $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->build(); // Example for HTTP connection configuration (port is optional)	
 
 $results_per_page=5;
-$page = $_GET['page'];
+
+$page = 1;		
+if(!empty($_GET['page'])) {
+	$page = $_GET['page'];
+}
+	
 $page--;
 $skip = $page * $results_per_page;
 
 
-	$name = '';
-	if(@$_GET['search'] !='') {
-		$name = $_GET['search'];
-	}else {
-		$name = '';		 
-	} 
+$name = '';
+if(!empty($_GET['search'])) {
+	$name = $_GET['search'];
+}
 	
 	
 	$query = "	
@@ -284,6 +288,19 @@ $skip = $page * $results_per_page;
 	foreach ($result1->getRecords() as $record1) {
 		$count = $record1->value('count(DISTINCT n)');
 	}
+		
+	/* MATCH (n)-[r:has_group]->()-[]->()-[r2:has_property]->() RETURN n,r,r2 LIMIT 500
+			$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
+	WITH n, count(r) as c
+
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p) WHERE EXISTS(g.group)
+
+	WITH n, c, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+
+	RETURN n.href, c, Collect({items: items,groups: groups, p: props}) as itemlist
+
+	ORDER BY c DESC
+		*/
 
 		
 	$query = "
