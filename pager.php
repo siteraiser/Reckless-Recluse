@@ -57,6 +57,7 @@ if(($page + 1) == $i){
 
 ---------- OR ------------
 
+
 <?php 
 
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
@@ -249,7 +250,6 @@ if(($page + 1) == $i){
 </html>
 
 ---------- OR With Search------------
-
 <?php 
 
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
@@ -285,14 +285,27 @@ $skip = $page * $results_per_page;
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
-			
+	/* MATCH (n)-[r:has_group]->()-[]->()-[r2:has_property]->() RETURN n,r,r2 LIMIT 500
+			$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
+	WITH n, count(r) as c
+
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p) WHERE EXISTS(g.group)
+
+	WITH n, c, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+
+	RETURN n.href, c, Collect({items: items,groups: groups, p: props}) as itemlist
+
+	ORDER BY c DESC
+		*/
+
+		
 	$query = "
 	MATCH ()-[r:references]->(n:Url)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE ((p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
 	OR (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')) 
 	AND NOT EXISTS(n.is404) AND n.type = 'internal'
 
-	WITH n, count(r) as c
+	WITH n, count(DISTINCT r) as c
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
 	WITH n, c, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
@@ -321,19 +334,14 @@ $skip = $page * $results_per_page;
 		$groups=[];$subGroup=[];$properties=[];
 		if($record->value('itemlist') !== ''){
 			foreach($record->value('itemlist') as $key => $item){
-				if($key=='items'){
-					
+				if($key=='items'){					
 			
 					foreach($item as $k => $itemID){
 						foreach( $itemID as $keys => $id){		
-							if($k == 'groups'){
-					
-								$groups[]= $id;
-								
+							if($k == 'groups'){					
+								$groups[]= $id;								
 							}
-						}	
-		
-						
+						}						
 						
 						foreach( $itemID as $keys => $id){		
 							if($k == 'items'){
@@ -345,20 +353,16 @@ $skip = $page * $results_per_page;
 							if($k == 'p'){
 								foreach( $id as $content => $attr){		
 									$properties[] = $attr;	
-								}						
+								}								
 							}
-						}							
-					}					
+						}						
+					}			
 				}			
 			}
 		}
 		
-		$new =[];
-
-				
-		$subGroup = array_reverse($subGroup, true);
-		
-		
+		$new =[];				
+		$subGroup = array_reverse($subGroup, true);		
 		foreach($subGroup as $key=> $value){
 			foreach($value as $key2){
 				foreach($properties as $pkey => $property){
@@ -371,11 +375,9 @@ $skip = $page * $results_per_page;
 					}					
 				}
 			}
-		}
-				
+		}				
 		
-		$new = array_reverse($new, true);
-			
+		$new = array_reverse($new, true);			
 		foreach($new as $group => $items){
 			$out.='<div class="group">';
 			$out.='<h3>'.$group.'</h3>';
