@@ -413,7 +413,7 @@ if(($page + 1) == $i){
 	$style='green';
 }
 ?>
-<a style="border: 2px solid <?php echo $style; ?>; font-size:18px;margin: 3px;padding: 2px;" href="?page=<?php echo $i; ?>&search=<?php echo@$_GET['search']?>"><?php echo $i; ?></a>
+<a style="border: 2px solid <?php echo $style; ?>; font-size:18px;margin: 3px;padding: 2px;" href="?page=<?php echo $i; ?>&amp;search=<?php echo@$_GET['search']?>"><?php echo $i; ?></a>
 <?php	
 }
 
@@ -435,7 +435,7 @@ if(($page + 1) == $i){
 	$style='green';
 }
 ?>
-<a style="border: 2px solid <?php echo $style; ?>; font-size:18px;margin: 3px;padding: 2px;" href="?page=<?php echo $i; ?>&search=<?php echo@$_GET['search']?>"><?php echo $i; ?></a>
+<a style="border: 2px solid <?php echo $style; ?>; font-size:18px;margin: 3px;padding: 2px;" href="?page=<?php echo $i; ?>&amp;search=<?php echo@$_GET['search']?>"><?php echo $i; ?></a>
 <?php	
 }
 ?>
