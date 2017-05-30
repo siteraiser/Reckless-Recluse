@@ -54,3 +54,172 @@ if(($page + 1) == $i){
 ?>
 </body>
 </html>
+
+---------- OR ------------
+<!doctype html>
+<html>
+<head></head>
+<body>
+<?php 
+
+require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
+use GraphAware\Neo4j\Client\ClientBuilder;
+
+
+$neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->build(); // Example for HTTP connection configuration (port is optional)	
+
+$results_per_page=5;
+$page = $_GET['page'];
+$page--;
+$skip = $page * $results_per_page;
+		$query = "MATCH (n:Url)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
+	RETURN count(DISTINCT n)";
+
+	$result1 = $neo4j->sendCypherQuery($query);
+		
+	foreach ($result1->getRecords() as $record1) {
+		$count = $record1->value('count(DISTINCT n)');
+	}
+		
+		/*
+			$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
+	WITH n, count(r) as c
+
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p) WHERE EXISTS(g.group)
+
+	WITH n, c, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+
+	RETURN n.href, c, Collect({items: items,groups: groups, p: props}) as itemlist
+
+	ORDER BY c DESC
+		*/
+		
+		
+	$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
+	WITH n, count(r) as c
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
+	WITH n, c, title
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
+	WITH n, c, title, description
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p) WHERE g.group = 'keywords' OR g.group ='mainlinks' OR g.group ='IFrames' 
+
+	WITH n, c, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+
+	RETURN n.href, c, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
+
+	ORDER BY c DESC
+	SKIP $skip
+	LIMIT $results_per_page";
+	$result = $neo4j->sendCypherQuery($query);
+
+	foreach ($result->getRecords() as $record) {
+		echo '<hr><div><a href="'.$record->value('n.href').'">'
+		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
+		.'</a> <-links- '.$record->value('c').'<br>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
+		.'<br>';
+		
+		
+		$groups=[];$subGroup=[];$properties=[];
+		if($record->value('itemlist') !== ''){
+			foreach($record->value('itemlist') as $key => $item){
+				if($key=='items'){
+					
+			
+					foreach($item as $k => $itemID){
+						foreach( $itemID as $keys => $id){		
+							if($k == 'groups'){
+					
+								$groups[]= $id;
+								
+							}
+						}	
+		
+						
+						
+						foreach( $itemID as $keys => $id){		
+							if($k == 'items'){
+								$subGroup[$id][] =  $keys ;
+							}
+						}	
+						
+						foreach( $itemID as $keys => $id){		
+							if($k == 'p'){
+								foreach( $id as $content => $attr){		
+									$properties[] = $attr;	
+								}
+								
+							}
+						}	
+					
+						
+					}
+
+					
+					
+				
+				}			
+			}
+		}
+		
+		$new =[];
+		foreach($subGroup as $key=> $value){
+			foreach($value as $key2){
+				foreach($properties as $pkey => $property){
+					if($key2 == $pkey){
+						foreach($groups as $gkey => $gp){
+							if($pkey == $gkey){
+								$new[$gp][$key][$key2]=$property;
+							}
+						}
+						
+						
+					}
+					
+				}
+			}
+		}
+				
+				
+				
+				
+			
+		foreach($new as $group => $items){
+			echo '<div>';
+			echo '<h3>'.$group.'</h3>';
+			foreach($items as $item => $properties){
+				echo '<div style="border: solid 1px grey;padding:1px 3px;">';
+				foreach($properties as $value){
+					echo '<div>'.$value['property'].'-'.$value['content'].'</div>';
+				}
+				echo '</div>';
+				
+			}
+			echo '</div>';
+		}					
+
+
+		echo '</div>';
+	}
+
+	
+	
+?>
+<hr>
+<?php	
+$total_page_count = ceil($count / $results_per_page);
+$i = 0;
+while(++$i <= $total_page_count){	
+$style='black';
+if(($page + 1) == $i){
+	$style='green';
+}
+?>
+
+<a style="border: 2px solid <?php echo $style; ?>; font-size:18px;margin: 3px;padding: 2px;" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+
+<?php	
+}
+?>
+</body>
+</html>
+
