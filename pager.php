@@ -56,10 +56,7 @@ if(($page + 1) == $i){
 </html>
 
 ---------- OR ------------
-<!doctype html>
-<html>
-<head></head>
-<body>
+
 <?php 
 
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
@@ -72,7 +69,8 @@ $results_per_page=5;
 $page = $_GET['page'];
 $page--;
 $skip = $page * $results_per_page;
-		$query = "MATCH (n:Url)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
+
+	$query = "MATCH (n:Url)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
 	RETURN count(DISTINCT n)";
 
 	$result1 = $neo4j->sendCypherQuery($query);
@@ -81,7 +79,7 @@ $skip = $page * $results_per_page;
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
-		/*
+	/*
 			$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
 	WITH n, count(r) as c
 
@@ -111,11 +109,14 @@ $skip = $page * $results_per_page;
 	SKIP $skip
 	LIMIT $results_per_page";
 	$result = $neo4j->sendCypherQuery($query);
-
+	
+	$out='';
 	foreach ($result->getRecords() as $record) {
-		echo '<hr><div><a href="'.$record->value('n.href').'">'
+		$out.='<hr><div class="page"><a href="'.$record->value('n.href').'"><h2>'
 		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
-		.'</a> <-links- '.$record->value('c').'<br>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
+		.'</a> <-links- '.$record->value('c')
+		.'</h2>'
+		.'<br>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
 		.'<br>';
 		
 		
@@ -180,30 +181,35 @@ $skip = $page * $results_per_page;
 		}
 				
 				
-				
-				
 			
 		foreach($new as $group => $items){
-			echo '<div>';
-			echo '<h3>'.$group.'</h3>';
+			$out.='<div class="group">';
+			$out.='<h3>'.$group.'</h3>';
 			foreach($items as $item => $properties){
-				echo '<div style="border: solid 1px grey;padding:1px 3px;">';
+				$out.='<div class="item">';
 				foreach($properties as $value){
-					echo '<div>'.$value['property'].'-'.$value['content'].'</div>';
+					$out.='<div class="property">'.$value['property'].'-'.$value['content'].'</div>';
 				}
-				echo '</div>';
+				$out.='</div>';
 				
 			}
-			echo '</div>';
-		}					
-
-
-		echo '</div>';
+			$out.='</div>';
+		}
+		$out.='</div>';
 	}
 
 	
 	
 ?>
+<!doctype html>
+<html>
+<head>
+<style>
+.item {border: solid 1px grey;padding:1px 3px}
+</style>
+</head>
+<body>
+<?php echo $out;?>
 <hr>
 <?php	
 $total_page_count = ceil($count / $results_per_page);
