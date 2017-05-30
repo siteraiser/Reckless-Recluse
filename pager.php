@@ -99,7 +99,7 @@ $skip = $page * $results_per_page;
 	WITH n, c, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
 	WITH n, c, title, description
-	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p) WHERE g.group = 'keywords' OR g.group ='mainlinks' OR g.group ='IFrames' 
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
 
 	WITH n, c, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 
@@ -116,7 +116,7 @@ $skip = $page * $results_per_page;
 		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
 		.'</a> <-links- '.$record->value('c')
 		.'</h2>'
-		.'<br>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
+		.'<h3>description</h3>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
 		.'<br>';
 		
 		
@@ -188,7 +188,7 @@ $skip = $page * $results_per_page;
 			foreach($items as $item => $properties){
 				$out.='<div class="item">';
 				foreach($properties as $value){
-					$out.='<div class="property">'.$value['property'].'-'.$value['content'].'</div>';
+					$out.='<div class="property">'.$value['property'].' : '.$value['content'].'</div>';
 				}
 				$out.='</div>';
 				
@@ -206,11 +206,10 @@ $skip = $page * $results_per_page;
 <head>
 <style>
 .item {border: solid 1px grey;padding:1px 3px}
+.page{border: 2px solid black;margin:5px;padding:5px;}
 </style>
 </head>
 <body>
-<?php echo $out;?>
-<hr>
 <?php	
 $total_page_count = ceil($count / $results_per_page);
 $i = 0;
@@ -220,12 +219,31 @@ if(($page + 1) == $i){
 	$style='green';
 }
 ?>
-
 <a style="border: 2px solid <?php echo $style; ?>; font-size:18px;margin: 3px;padding: 2px;" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+<?php	
+}
 
+echo $count. ' Results';
+?>
+
+
+<hr>
+<?php echo $out;?>
+<hr>
+
+
+<?php	
+
+$i = 0;
+while(++$i <= $total_page_count){	
+$style='black';
+if(($page + 1) == $i){
+	$style='green';
+}
+?>
+<a style="border: 2px solid <?php echo $style; ?>; font-size:18px;margin: 3px;padding: 2px;" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
 <?php	
 }
 ?>
 </body>
 </html>
-
