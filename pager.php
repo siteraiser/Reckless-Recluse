@@ -289,20 +289,7 @@ if(!empty($_GET['search'])) {
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
-	/* MATCH (n)-[r:has_group]->()-[]->()-[r2:has_property]->() RETURN n,r,r2 LIMIT 500
-			$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
-	WITH n, count(r) as c
-
-	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p) WHERE EXISTS(g.group)
-
-	WITH n, c, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
-
-	RETURN n.href, c, Collect({items: items,groups: groups, p: props}) as itemlist
-
-	ORDER BY c DESC
-		*/
-
-		
+			
 	$query = "
 	MATCH ()-[r:references]->(n:Url)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE ((p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
