@@ -79,8 +79,8 @@ $skip = $page * $results_per_page;
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
-	/*
-			$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
+	/* just get all values
+	$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
 	WITH n, count(r) as c
 
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p) WHERE EXISTS(g.group)
@@ -90,8 +90,8 @@ $skip = $page * $results_per_page;
 	RETURN n.href, c, Collect({items: items,groups: groups, p: props}) as itemlist
 
 	ORDER BY c DESC
-		*/
-		
+	*/
+	//Pick and exclude
 		
 	$query = "MATCH (n)<-[r]-() WHERE NOT EXISTS(n.is404) AND n.type = 'internal'
 	WITH n, count(r) as c
