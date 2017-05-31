@@ -52,21 +52,22 @@ if(!empty($_GET['search'])) {
 		
 /* Weighted results 
 	$query = "
-	MATCH ()-[r1:references]->(n1:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
+	MATCH ()-[:references]->(titleN:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE (p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
-	WITH n1, r1	
+	AND NOT EXISTS(titleN.is404) AND titleN.type = 'internal'
+	WITH titleN
 	
-	MATCH ()-[r2:references]->(n2:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
+	MATCH ()-[:references]->(descN:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')
-	AND NOT EXISTS(n2.is404) AND n2.type = 'internal'
+	AND NOT EXISTS(descN.is404) AND descN.type = 'internal'
 	 
-	WITH (collect(n1) + collect(n2)) as alln, n1, n2
+	WITH (collect(titleN) + collect(descN)) as alln, titleN, descN
 	UNWIND alln AS n
-	WITH DISTINCT n, n1, n2
+	WITH DISTINCT n, titleN, descN
 	
 	MATCH ()-[r]->(n)
 
-	WITH ( (count(DISTINCT n1) * 2) + count(DISTINCT n2) * 1 ) AS rank, n, count(DISTINCT r) as c
+	WITH ( (count(DISTINCT titleN) * 2) + count(DISTINCT descN) * 1 ) AS rank, n, count(DISTINCT r) as c
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
 	WITH rank, n, c, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
@@ -77,7 +78,7 @@ if(!empty($_GET['search'])) {
 
 	RETURN rank, n.href, c, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 
-	ORDER BY rank DESC
+	ORDER BY rank DESC, c DESC
 	SKIP $skip
 	LIMIT $results_per_page";
 	*/
