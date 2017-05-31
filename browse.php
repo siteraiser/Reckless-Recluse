@@ -50,7 +50,7 @@ if(!empty($_GET['search'])) {
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
-/* Weighted results 
+/* Weighted results - not likely to give expected results as is...
 	$query = "
 	MATCH ()-[:references]->(titleN:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE (p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
