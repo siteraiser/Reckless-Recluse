@@ -60,13 +60,13 @@ if(!empty($_GET['search'])) {
 	WHERE (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')
 	AND NOT EXISTS(n2.is404) AND n2.type = 'internal'
 	 
-	WITH (collect(n1) + collect(n2)) as alln, r1, r2
+	WITH (collect(n1) + collect(n2)) as alln, n1, n2
 	UNWIND alln AS n
-	WITH DISTINCT n, r1, r2
+	WITH DISTINCT n, n1, n2
 	
 	MATCH ()-[r]->(n)
 
-	WITH ( (count(DISTINCT r1) * 2) + count(DISTINCT r2) * 1 ) AS rank, n, count(DISTINCT r) as c
+	WITH ( (count(DISTINCT n1) * 2) + count(DISTINCT n2) * 1 ) AS rank, n, count(DISTINCT r) as c
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
 	WITH rank, n, c, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
@@ -77,7 +77,7 @@ if(!empty($_GET['search'])) {
 
 	RETURN rank, n.href, c, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 
-	ORDER BY rank DESC, c DESC
+	ORDER BY rank DESC
 	SKIP $skip
 	LIMIT $results_per_page";
 	*/
