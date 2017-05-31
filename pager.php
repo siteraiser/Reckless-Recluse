@@ -277,7 +277,7 @@ if(!empty($_GET['search'])) {
 	
 	
 	$query = "	
-	MATCH ()-[r:references]->(n:Url)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p)
+	MATCH (n:Url)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE ((p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
 	OR (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')) 
 	AND NOT EXISTS(n.is404) AND n.type = 'internal'
@@ -289,14 +289,18 @@ if(!empty($_GET['search'])) {
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
-			
+
+		
 	$query = "
-	MATCH ()-[r:references]->(n:Url)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p)
+	MATCH (n:Url)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE ((p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
 	OR (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')) 
 	AND NOT EXISTS(n.is404) AND n.type = 'internal'
+	
+	WITH DISTINCT n
+	MATCH ()-[r]->(n)
 
-	WITH n, count(DISTINCT r) as c
+	WITH n, count(r) as c
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
 	WITH n, c, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[r2:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
