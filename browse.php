@@ -50,7 +50,37 @@ if(!empty($_GET['search'])) {
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
+/* Weighted results 
+	$query = "
+	MATCH ()-[r1:references]->(n1:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
+	WHERE (p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
+	WITH n1, r1	
+	
+	MATCH ()-[r2:references]->(n2:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
+	WHERE (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')
+	AND NOT EXISTS(n2.is404) AND n2.type = 'internal'
+	 
+	WITH (collect(n1) + collect(n2)) as alln, r1, r2
+	UNWIND alln AS n
+	WITH DISTINCT n, r1, r2
+	
+	MATCH ()-[r]->(n)
 
+	WITH ( (count(DISTINCT r1) * 2) + count(DISTINCT r2) * 1 ) AS rank, n, count(DISTINCT r) as c
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
+	WITH rank, n, c, title
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
+	WITH rank, n, c, title, description
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
+
+	WITH rank, n, c, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+
+	RETURN rank, n.href, c, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
+
+	ORDER BY rank DESC, c DESC
+	SKIP $skip
+	LIMIT $results_per_page";
+	*/
 		
 	$query = "
 	MATCH ()-[:references]->(n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
