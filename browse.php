@@ -51,20 +51,7 @@ if(!empty($_GET['search'])) {
 	}
 		
 /* Weighted results - 
-		$query = "	
-	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
-	WHERE ((p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
-	OR (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')) 
-	AND NOT EXISTS(n.is404) AND n.type = 'internal'
-	RETURN count(DISTINCT n)";
 	
-	$result1 = $neo4j->sendCypherQuery($query);
-		
-	foreach ($result1->getRecords() as $record1) {
-		$count = $record1->value('count(DISTINCT n)');
-	}
-		
-
 	$query = "
 	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE ((p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
