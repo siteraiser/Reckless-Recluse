@@ -50,34 +50,44 @@ if(!empty($_GET['search'])) {
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
-/* Weighted results - not likely to give expected results as is...
-	$query = "
-	MATCH ()-[:references]->(titleN:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
-	WHERE (p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
-	AND NOT EXISTS(titleN.is404) AND titleN.type = 'internal'
-	WITH titleN
+/* Weighted results - 
+		$query = "	
+	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
+	WHERE ((p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
+	OR (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')) 
+	AND NOT EXISTS(n.is404) AND n.type = 'internal'
+	RETURN count(DISTINCT n)";
 	
-	MATCH ()-[:references]->(descN:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
-	WHERE (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')
-	AND NOT EXISTS(descN.is404) AND descN.type = 'internal'
-	 
-	WITH (collect(titleN) + collect(descN)) as alln, titleN, descN
-	UNWIND alln AS n
-	WITH DISTINCT n, titleN, descN
+	$result1 = $neo4j->sendCypherQuery($query);
+		
+	foreach ($result1->getRecords() as $record1) {
+		$count = $record1->value('count(DISTINCT n)');
+	}
+		
+
+	$query = "
+	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
+	WHERE ((p.content =~ '(?i).*".$name.".*' AND g.group = 'title')
+	OR (p.content =~ '(?i).*".$name.".*' AND g.group = 'description')) 
+	AND NOT EXISTS(n.is404) AND n.type = 'internal'
+	
+
+	WITH DISTINCT n, 
+	SUM(CASE WHEN (p.content =~ '(?i).*".$name.".*' AND g.group = 'title') THEN 2 ELSE 0 END ) AS titlecount, 
+   	SUM(CASE WHEN (p.content =~ '(?i).*".$name.".*' AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount
 	
 	MATCH ()-[r]->(n)
-
-	WITH ( (count(DISTINCT titleN) * 2) + count(DISTINCT descN) * 1 ) AS rank, n, count(DISTINCT r) as c
+	WITH n, count(DISTINCT r) as c, titlecount, desccount
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
-	WITH rank, n, c, title
+	WITH n, c, title, titlecount, desccount
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
-	WITH rank, n, c, title, description
+	WITH n, c, title, description, titlecount, desccount
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
+	WITH n, c, title, description, titlecount, desccount, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+	
 
-	WITH rank, n, c, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
-
-	RETURN rank, n.href, c, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
-
+	
+	RETURN titlecount + desccount AS rank, n.href, c, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 	ORDER BY rank DESC, c DESC
 	SKIP $skip
 	LIMIT $results_per_page";
