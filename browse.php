@@ -64,7 +64,7 @@ if(!empty($_GET['search'])) {
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount,
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'h1s') THEN 1 ELSE 0 END ) AS h1scount
 		
-	MATCH (linkednodes:Url)-[r]->(n),
+	OPTIONAL MATCH (linkednodes:Url)-[r]->(n),
 	(linkstointernternal:Url {type: 'internal'})<-[]-(n),
 	(linkstoexternternal:Url {type: 'external'})<-[]-(n)
 	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT linkstointernternal) as lti, count(DISTINCT linkstoexternternal) as lte, count(DISTINCT r) as lc, titlecount + desccount + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank
@@ -75,7 +75,7 @@ if(!empty($_GET['search'])) {
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
 	WITH n,rank, ln, lti, lte, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 		
-	RETURN rank, n.href, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
+	RETURN n.href, rank, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 	ORDER BY rank DESC, ln DESC, lc DESC
 	SKIP {skip}
 	LIMIT {rpp}";
