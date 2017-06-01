@@ -50,7 +50,8 @@ if(!empty($_GET['search'])) {
 	foreach ($result1->getRecords() as $record1) {
 		$count = $record1->value('count(DISTINCT n)');
 	}
-
+		
+	//maybe not use distinct for h2?
 	$query = "
 	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE ((p.content =~ {search} AND g.group = 'title')
@@ -64,16 +65,16 @@ if(!empty($_GET['search'])) {
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount,
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'h1s') THEN 1 ELSE 0 END ) AS h1scount
 		
-	MATCH (linkednodes:Url)-[r]->(n)
-	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc, titlecount + desccount + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank
+	MATCH (linkednodes:Url)-[r]->(n),(linkstointernternal:Url {type: 'internal'})<-[]-(n),(linkstoexternternal:Url {type: 'external'})<-[]-(n)
+	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT linkstointernternal) as lti, count(DISTINCT linkstoexternternal) as lte, count(DISTINCT r) as lc, titlecount + desccount + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
-	WITH n, rank, ln, lc, title
+	WITH n, rank, ln, lti, lte, lc, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
-	WITH n, rank, ln, lc, title, description
+	WITH n, rank, ln, lti, lte, lc, title, description
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
-	WITH n,rank, ln, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+	WITH n,rank, ln, lti, lte, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 		
-	RETURN rank, n.href, ln, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
+	RETURN rank, n.href, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 	ORDER BY rank DESC, ln DESC, lc DESC
 	SKIP {skip}
 	LIMIT {rpp}";
@@ -85,7 +86,7 @@ if(!empty($_GET['search'])) {
 		$out.='<hr><div class="page"><a href="'.$record->value('n.href').'"><h2>'
 		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
 		.'</a></h2>' 
-		.'<h4 id="stats">Unique Page Links: '.$record->value('ln').' - Total Links: '.$record->value('lc').'  - T2+D1+H1s1 Score: '.$record->value('rank')
+		.'<h4 id="stats">Unique Page Links: '.$record->value('ln').' - Links to internal: '.$record->value('lti').' - Links to external: '.$record->value('lte').' - Total Links: '.$record->value('lc').'  - T2+D1+H1s1 Score: '.$record->value('rank')
 		.'</h4>'
 		.'<h3>description</h3>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
 		.'<br>';
