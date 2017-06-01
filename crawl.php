@@ -56,6 +56,7 @@ $crawl_level = 0;
 $data['title'] = ['head'=>['//title'=>['text']]];
 $data['description'] = ['head'=>['//meta[contains(attribute::name, "description")]'=>['content']]];
 $data['keywords'] = ['head'=>['//meta[contains(attribute::name, "keywords")]'=>['content']]];
+$data['h1s'] = ['body'=>['//h1'=>['text']]];
 //$data['script'] = ['query'=>['//script[contains(attribute::type, "application/ld+json")]'=>['innertext']]];
 $data['a'] = ['body'=>['.//a'=>['href']]];//['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
 //$data['mobile'] = ['head'=>['//link[contains(attribute::rel, "alternate")]'=>['href']]];
