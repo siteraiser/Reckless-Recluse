@@ -31,20 +31,20 @@ $page--;
 $skip = $page * $results_per_page;
 
 
-$name = '';
+$search = '';
 if(!empty($_GET['search'])) {
-	$name = $_GET['search'];
+	$search = $_GET['search'];
 }
 	
 	
 	$query = "	
 	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
-	WHERE ((p.content =~ {name} AND g.group = 'title')
-	OR (p.content =~ {name} AND g.group = 'description')) 
+	WHERE ((p.content =~ {search} AND g.group = 'title')
+	OR (p.content =~ {search} AND g.group = 'description')) 
 	AND NOT EXISTS(n.is404) AND n.type = 'internal'
 	RETURN count(DISTINCT n)";
 	
-	$result1 = $neo4j->run($query,["name"=>"(?i).*$name.*"]);
+	$result1 = $neo4j->run($query,["search"=>"(?i).*$search.*"]);
 		
 	foreach ($result1->getRecords() as $record1) {
 		$count = $record1->value('count(DISTINCT n)');
@@ -53,14 +53,13 @@ if(!empty($_GET['search'])) {
 
 	$query = "
 	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
-	WHERE ((p.content =~ {name} AND g.group = 'title')
-	OR (p.content =~ {name} AND g.group = 'description')) 
+	WHERE ((p.content =~ {search} AND g.group = 'title')
+	OR (p.content =~ {search} AND g.group = 'description')) 
 	AND NOT EXISTS(n.is404) AND n.type = 'internal'
 	
-
 	WITH DISTINCT n, 
-	SUM(CASE WHEN (p.content =~ {name} AND g.group = 'title') THEN 2 ELSE 0 END ) AS titlecount, 
-   	SUM(CASE WHEN (p.content =~ {name} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount
+	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'title') THEN 2 ELSE 0 END ) AS titlecount, 
+	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount
 	
 	MATCH ()-[r]->(n)
 	WITH n, count(DISTINCT r) as c, titlecount + desccount AS rank
@@ -70,17 +69,13 @@ if(!empty($_GET['search'])) {
 	WITH n, c, title, description, rank
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
 	WITH n, c, title, description, rank, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
-	
-
-	
+		
 	RETURN rank, n.href, c, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 	ORDER BY rank DESC, c DESC
 	SKIP {skip}
 	LIMIT {rpp}";
 		
-		
-
-	$result = $neo4j->run($query,["name"=>"(?i).*$name.*","skip"=>$skip,"rpp"=>$results_per_page]);//'(?i).*
+	$result = $neo4j->run($query,["search"=>"(?i).*$search.*","skip"=>$skip,"rpp"=>$results_per_page]);//'(?i).*
 	
 	$out='';
 	foreach ($result->getRecords() as $record) {
