@@ -40,7 +40,8 @@ if(!empty($_GET['search'])) {
 	$query = "	
 	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE ((p.content =~ {search} AND g.group = 'title')
-	OR (p.content =~ {search} AND g.group = 'description')) 
+	OR (p.content =~ {search} AND g.group = 'description')
+	OR (p.content =~ {search} AND g.group = 'h1s')) 
 	AND NOT EXISTS(n.is404) AND n.type = 'internal'
 	RETURN count(DISTINCT n)";
 	
@@ -50,19 +51,22 @@ if(!empty($_GET['search'])) {
 		$count = $record1->value('count(DISTINCT n)');
 	}
 		
-
+	//maybe not use distinct for h2?
 	$query = "
 	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
 	WHERE ((p.content =~ {search} AND g.group = 'title')
-	OR (p.content =~ {search} AND g.group = 'description')) 
+	OR (p.content =~ {search} AND g.group = 'description')
+	OR (p.content =~ {search} AND g.group = 'h1s')) 
 	AND NOT EXISTS(n.is404) AND n.type = 'internal'
 	
 	WITH DISTINCT n, 
+		
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'title') THEN 2 ELSE 0 END ) AS titlecount, 
-	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount
-	
+	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount,
+	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'h1s') THEN 1 ELSE 0 END ) AS h1scount
+		
 	MATCH (linkednodes:Url)-[r]->(n)
-	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc, titlecount + desccount AS rank
+	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc, titlecount + desccount + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
 	WITH n, rank, ln, lc, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
@@ -81,8 +85,9 @@ if(!empty($_GET['search'])) {
 	foreach ($result->getRecords() as $record) {
 		$out.='<hr><div class="page"><a href="'.$record->value('n.href').'"><h2>'
 		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
-		.'</a>  <-Unique Page Links- '.$record->value('ln').'<-Total Links- '.$record->value('lc').'  - T2+D1 Score: '.$record->value('rank')
-		.'</h2>'
+		.'</a></h2>' 
+		.'<h4 id="stats">Unique Page Links: '.$record->value('ln').' - Total Links: '.$record->value('lc').'  - T2+D1+H1s1 Score: '.$record->value('rank')
+		.'</h4>'
 		.'<h3>description</h3>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
 		.'<br>';
 		
@@ -157,6 +162,7 @@ if(!empty($_GET['search'])) {
 <html>
 <head>
 <style>
+h4#stats{color:grey;}
 .item {border: solid 1px grey;padding:1px 3px}
 .page{border: 2px solid black;margin:5px;padding:5px;}
 </style>
