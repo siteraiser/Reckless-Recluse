@@ -60,7 +60,7 @@ if(!empty($_GET['search'])) {
 
 	WITH DISTINCT n, 
 	SUM(CASE WHEN (p.content =~ {name} AND g.group = 'title') THEN 2 ELSE 0 END ) AS titlecount, 
-    SUM(CASE WHEN (p.content =~ {name} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount
+   	SUM(CASE WHEN (p.content =~ {name} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount
 	
 	MATCH ()-[r]->(n)
 	WITH n, count(DISTINCT r) as c, titlecount + desccount AS rank
