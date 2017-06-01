@@ -84,7 +84,7 @@ if(!empty($_GET['search'])) {
 	
 	$out='';
 	foreach ($result->getRecords() as $record) {
-		$out.='<hr><div class="page"><a href="'.$record->value('n.href').'"><h2>'
+		$out.='<hr><div class="page"><h2><a href="'.$record->value('n.href').'">'
 		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
 		.'</a></h2>' 
 		.'<h4 id="stats">Unique Page Links: '.$record->value('ln').' - Total Links: '.$record->value('lc').' - Links to internal: '.$record->value('lti').' - Links to external: '.$record->value('lte').'  - T2+D1+H1s1 Score: '.$record->value('rank')
