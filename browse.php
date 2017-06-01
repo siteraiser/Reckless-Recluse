@@ -97,7 +97,9 @@ if(!empty($_GET['search'])) {
 		if($record->value('itemlist') !== ''){
 			foreach($record->value('itemlist') as $key => $item){
 				if($key=='items'){					
-			
+			echo'<pre>';
+			var_dump($item);
+			echo'</pre>';
 					foreach($item as $k => $itemID){
 						foreach( $itemID as $keys => $id){		
 							if($k == 'groups'){					
