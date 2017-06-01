@@ -57,6 +57,7 @@ $data['title'] = ['head'=>['//title'=>['text']]];
 $data['description'] = ['head'=>['//meta[contains(attribute::name, "description")]'=>['content']]];
 $data['keywords'] = ['head'=>['//meta[contains(attribute::name, "keywords")]'=>['content']]];
 $data['h1s'] = ['body'=>['//h1'=>['text']]];
+$data['h2s'] = ['body'=>['//h2'=>['text']]];
 //$data['script'] = ['query'=>['//script[contains(attribute::type, "application/ld+json")]'=>['innertext']]];
 $data['a'] = ['body'=>['.//a'=>['href']]];//['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
 //$data['mobile'] = ['head'=>['//link[contains(attribute::rel, "alternate")]'=>['href']]];
@@ -463,7 +464,7 @@ function stripHTML($html){
 		foreach( $selector->query('(//base)') as $b){
 			$base_href = $b->getAttribute('href');
 		}	
-		$charset = '';//base--href in header
+		$charset = '';//content type
 		foreach( $selector->query('(//meta[contains(attribute::http-equiv, "Content-Type")])') as $c){
 			$ctype = $c->getAttribute('content');
 			$charArray = explode(';',$charset);
@@ -474,11 +475,11 @@ function stripHTML($html){
 					$charset = 'utf-8';					
 				}			
 			}
-
 		}
 		foreach( $selector->query('(//meta[contains(attribute::charset, "*")])') as $c){
 			$charset = strtolower($c->getAttribute('charset'));
 		}	
+		
         foreach ($this->data as $group => $elements){  
 		
 			foreach($elements as $elem => $atts){		
@@ -489,21 +490,20 @@ function stripHTML($html){
 					foreach( $entries as $entry ) {
 						
 						foreach( $selector->query( $query, $entry) as $e){
-$nodeID = $nodeID + 1;
-						
+							
+							$nodeID = $nodeID + 1;						
 							foreach($attributes as $attribute){	
 								
 								if($attribute=='innertext'){ 
 									$str = $this->innerText($e);//$a2->nodeValue;    
 									$this->atts[$pageUrl][$group][$nodeID][$attribute] = ($charset == 'utf-8'? $str :  utf8_decode($str));
 								}else if($attribute=='text'){
-									$str = $e->nodeValue;
-									
+									$str = $e->nodeValue;									
 									$this->atts[$pageUrl][$group][$nodeID][$attribute] = ($charset == 'utf-8'? $str :  utf8_decode($str));					
 								}else if($attribute == 'href'){//Make a fqurl
-								$url = $e->getAttribute($attribute);
-								//utf8_decode($e->getAttribute($attribute));
-								$url =  (strtolower($charset) == 'utf-8'? $url :  utf8_decode($url));
+									$url = $e->getAttribute($attribute);
+									
+									$url =  (strtolower($charset) == 'utf-8'? $url :  utf8_decode($url));
 									if(strpos($url, '#') === 0 || strpos($url, '?') === 0){ /* & group =='a' ..? */
 										
 										$path =parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST).	parse_url($pageUrl, PHP_URL_PATH);
@@ -535,15 +535,20 @@ $nodeID = $nodeID + 1;
 									$str = $e->getAttribute($attribute);
 									$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] =($charset == 'utf-8'? $str :  utf8_decode($str));
 								}	
-								
-								
+																
 								
 								//Add nodes to graph
 								if($attribute == 'href' && $group =='a'){
 									
+									//go back one /.
+									if(substr($final_value, -2) == '/.'){
+										$final_value = substr($final_value,0, -2);
+									}
+
 									$final_value = $this->addSlash($final_value);
+									
 									$this->ahrefs[$pageUrl][] = $final_value;// for filtering
-									//force slash one way or another
+									//force slash one way or another for base url
 									
 									$this->addUrl($pageUrl, $final_value);									
 								}								
@@ -576,7 +581,7 @@ $nodeID = $nodeID + 1;
 		
 		return true;	
 	}
-	public function exclude_dirs($url){ // exclude directory (robot.txt check not completed yet)
+	public function exclude_dirs($url){  //exclude directory (robot.txt check not completed yet)
 		foreach($this->exclude_dirs as $dir){
 			if(substr( $url , 0, strlen($dir) ) === $dir){
 				return false;
