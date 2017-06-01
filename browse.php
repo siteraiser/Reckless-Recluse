@@ -61,17 +61,17 @@ if(!empty($_GET['search'])) {
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'title') THEN 2 ELSE 0 END ) AS titlecount, 
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount
 	
-	MATCH ()-[r]->(n)
-	WITH n, count(DISTINCT r) as c, titlecount + desccount AS rank
+	MATCH (linkednodes:Url)-[r]->(n)
+	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc, titlecount + desccount AS rank
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
-	WITH n, c, title, rank
+	WITH n, rank, ln, lc, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
-	WITH n, c, title, description, rank
+	WITH n, rank, ln, lc, title, description
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
-	WITH n, c, title, description, rank, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+	WITH n,rank, ln, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 		
-	RETURN rank, n.href, c, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
-	ORDER BY rank DESC, c DESC
+	RETURN rank, n.href, ln, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
+	ORDER BY rank DESC, ln DESC, lc DESC
 	SKIP {skip}
 	LIMIT {rpp}";
 		
@@ -81,7 +81,7 @@ if(!empty($_GET['search'])) {
 	foreach ($result->getRecords() as $record) {
 		$out.='<hr><div class="page"><a href="'.$record->value('n.href').'"><h2>'
 		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
-		.'</a> <-Links- '.$record->value('c').'  - T2+D1 Score: '.$record->value('rank')
+		.'</a>  <-Unique Page Links- '.$record->value('ln').'<-Total Links- '.$record->value('lc').'  - T2+D1 Score: '.$record->value('rank')
 		.'</h2>'
 		.'<h3>description</h3>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
 		.'<br>';
