@@ -87,7 +87,7 @@ if(!empty($_GET['search'])) {
 		$out.='<hr><div class="page"><a href="'.$record->value('n.href').'"><h2>'
 		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
 		.'</a></h2>' 
-		.'<h4 id="stats">Unique Page Links: '.$record->value('ln').' - Links to internal: '.$record->value('lti').' - Links to external: '.$record->value('lte').' - Total Links: '.$record->value('lc').'  - T2+D1+H1s1 Score: '.$record->value('rank')
+		.'<h4 id="stats">Unique Page Links: '.$record->value('ln').' - Total Links: '.$record->value('lc').' - Links to internal: '.$record->value('lti').' - Links to external: '.$record->value('lte').'  - T2+D1+H1s1 Score: '.$record->value('rank')
 		.'</h4>'
 		.'<h3>description</h3>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
 		.'<br>';
