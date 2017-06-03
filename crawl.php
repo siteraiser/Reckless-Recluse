@@ -484,13 +484,14 @@ function stripHTML($html){
 				$check = trim($val);
 				$check = strtolower($check);
 				if($check == 'charset=utf-8'){
-					$charset = 'utf-8';					
+					echo $charset = 'utf-8';					
 				}			
 			}
 		}
-		foreach( $selector->query('(//meta[contains(attribute::charset, "*")])') as $c){
+		foreach( $selector->query('(//meta[contains(attribute::charset, "utf-8") or contains(attribute::charset, "UTF-8")])') as $c){
 			$charset = strtolower($c->getAttribute('charset'));
 		}	
+
 		
         foreach ($this->data as $group => $elements){  
 		
