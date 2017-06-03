@@ -75,8 +75,8 @@ if(!empty($_GET['search'])) {
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
 	WITH n,rank, ln, lti, lte, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 		
-	RETURN n.href, rank, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
-	ORDER BY rank DESC, ln DESC, lc DESC
+	RETURN n.href, n.pr, rank, n.pr * rank AS order, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
+	ORDER BY order DESC
 	SKIP {skip}
 	LIMIT {rpp}";
 		
@@ -87,7 +87,7 @@ if(!empty($_GET['search'])) {
 		$out.='<hr><div class="page"><h2><a href="'.$record->value('n.href').'">'
 		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
 		.'</a></h2>' 
-		.'<h4 id="stats">Unique Page Links: '.$record->value('ln').' - Total Links: '.$record->value('lc').' - Links to internal: '.$record->value('lti').' - Links to external: '.$record->value('lte').'  - T2+D1+H1s1 Score: '.$record->value('rank')
+		.'<h4 id="stats">Page Rank: '.$record->value('n.pr').' - Unique Page Links: '.$record->value('ln').' - Total Links: '.$record->value('lc').' - Links to internal: '.$record->value('lti').' - Links to external: '.$record->value('lte').'  - T2+D1+H1s1 Score: '.$record->value('rank')
 		.'</h4>'
 		.'<h3>description</h3>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
 		.'<br>';
