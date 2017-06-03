@@ -23,12 +23,11 @@ Curl Timeout:<input placeholder="download timeout" type="text" name="download_ti
 Use Slash:<input type="checkbox" name="slash" <?php echo (@$_GET['slash']?'checked':'');?> value="1"><br>
 Check External:<input type="checkbox" name="external" <?php echo (@$_GET['external']?'checked':'');?> value="1"><br>
 
-<div class="center-align">
-  <button class="btn waves-effect waves-light light-blue" type="submit">Crawlem!
-    <i class="material-icons right"></i>
+  <div>
+  <button type="submit">Crawlem!
   </button>
   </div>
-  </form>
+</form>
 
 
 
@@ -57,7 +56,6 @@ $data['title'] = ['head'=>['//title'=>['text']]];
 $data['description'] = ['head'=>['//meta[contains(attribute::name, "description")]'=>['content']]];
 $data['keywords'] = ['head'=>['//meta[contains(attribute::name, "keywords")]'=>['content']]];
 $data['h1s'] = ['body'=>['//h1'=>['text']]];
-$data['h2s'] = ['body'=>['//h2'=>['text']]];
 //$data['script'] = ['query'=>['//script[contains(attribute::type, "application/ld+json")]'=>['innertext']]];
 $data['a'] = ['body'=>['.//a'=>['href']]];//['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
 //$data['mobile'] = ['head'=>['//link[contains(attribute::rel, "alternate")]'=>['href']]];
@@ -528,15 +526,13 @@ function stripHTML($html){
 												//is a full url normal
 												$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] = $url; 
 											}
-										}	
-										
+										}											
 									}
 								}else{
 									$str = $e->getAttribute($attribute);
 									$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute] =($charset == 'utf-8'? $str :  utf8_decode($str));
 								}	
 																
-								
 								//Add nodes to graph
 								if($attribute == 'href' && $group =='a'){
 									
@@ -564,12 +560,10 @@ function stripHTML($html){
 		
 			
 		$this->addAtts($pageUrl);
-				
-		
-		
-		
+						
     }  
 	//end of getAtts()
+	
 	
 	public function include_dirs($url){ // crawl dir only
 		
@@ -944,6 +938,8 @@ if(@$_GET['external']){
 	$Crawl->getPagesWithExternal404s();
 	
 }
+
+include('/pr.php');
 ?> 
 </div>
 
