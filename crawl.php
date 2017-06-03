@@ -86,7 +86,7 @@ class crawlLinks {
     public $data=[];
     public $atts=[];
   
-	public $capture = 'all';//all or null for default domain only, no 404s..
+	public $capture = '';//all or null for default domain only, no 404s..
 	public $i=0;//levels 
 	public $four04s=[];
 	public $redirected=[];
@@ -194,8 +194,20 @@ function checkUrl($url)
 	}
 	return $msg;
 }
+
+function isFile($url){
+	if(  stristr( strtolower( $url),'.pdf')===false && stristr( strtolower( $url),'.jpg')===false && stristr( strtolower( $url),'.png')===false){	
+		return false;
+	}else{
+		return true;
+	}
+}
+
 function addUrl($pageUrl,$url){
  if(stristr( $pageUrl,'#',0) || stristr( $url,'#',0)) {return;}
+ 
+ 
+ echo 'add url';
 	if(parse_url($pageUrl, PHP_URL_HOST) ==  parse_url($url, PHP_URL_HOST)){
 			$type = 'internal';
 		}else{
@@ -219,6 +231,7 @@ function addUrl($pageUrl,$url){
 	$query = "MATCH (u1:Url { href: {pageUrl}}), (u2:Url { href: {url}}) 
 	CREATE (u1)-[:references]->(u2)";//unique
 	$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"url"=>$url]);
+	 echo 'url added';
 }	
 function addAtts($pageUrl){
 	
@@ -230,7 +243,7 @@ function addAtts($pageUrl){
 */	
 	
 	if(1){
-		
+			
 		$properties = $groups =[];
 		if(isset($this->atts[$pageUrl])){
 			$properties = $this->atts[$pageUrl];
@@ -248,7 +261,7 @@ function addAtts($pageUrl){
 				$groups[$group][]=$array;
 			}		
 		}			
-	
+
 				
 		foreach($groups as $group => $items){
 			
@@ -260,16 +273,21 @@ function addAtts($pageUrl){
 				$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})
 				CREATE (g)-[:has_item]->(i:Item { itemID: {item}})";//		
 				$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item]);
-				
-				foreach($value as $property => $content){
+					echo '<hr>';
+				foreach($value as $property => $content){	
+				echo '<br> pageurl{'.$pageUrl .'}---group: {'. $group.'}---item: {'. $item.'}---prop: {'. $property.'}---content: {'. str_replace( '&nbsp;', ' ', $content ).'}';
+
 					$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})-[:has_item]->(i:Item { itemID: {item}})
 					CREATE (i)-[:has_property]->(p:Property {property:{property},content:{content}})";//		
-					$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item,"property"=>$property,"content"=>$content]);	
-			
-				}		
+					$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item,"property"=>$property,"content"=>str_replace( '&nbsp;', ' ', $content )]);	
+		
+				}		 
 			}	
 		}
+		
+			
 	}
+	
 		
 }
 function getPageList($type='internal'){
@@ -449,7 +467,7 @@ function stripHTML($html){
 	 
 	 
     function getAtts($html,$pageUrl){
- 
+	
  $nodeID=0;
  
         $doc = new DOMDocument();
@@ -465,12 +483,12 @@ function stripHTML($html){
 		$charset = '';//content type
 		foreach( $selector->query('(//meta[contains(attribute::http-equiv, "Content-Type")])') as $c){
 			$ctype = $c->getAttribute('content');
-			$charArray = explode(';',$charset);
+			$charArray = explode(';',$ctype);
 			foreach($charArray as $val){
 				$check = trim($val);
 				$check = strtolower($check);
 				if($check == 'charset=utf-8'){
-					$charset = 'utf-8';					
+					echo $charset = 'utf-8';					
 				}			
 			}
 		}
@@ -939,7 +957,7 @@ if(@$_GET['external']){
 	
 }
 
-include('/pr.php');
+include($_SERVER['DOCUMENT_ROOT'].'/pr.php');
 ?> 
 </div>
 
