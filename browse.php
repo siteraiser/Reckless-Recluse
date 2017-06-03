@@ -75,8 +75,8 @@ if(!empty($_GET['search'])) {
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
 	WITH n,rank, ln, lti, lte, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 		
-	RETURN n.href, n.pr, rank, n.pr + rank AS order, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
-	ORDER BY order DESC
+	RETURN n.href, n.pr, rank, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
+	ORDER BY rank DESC, n.pr DESC
 	SKIP {skip}
 	LIMIT {rpp}";
 		
