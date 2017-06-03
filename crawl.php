@@ -206,8 +206,6 @@ function isFile($url){
 function addUrl($pageUrl,$url){
  if(stristr( $pageUrl,'#',0) || stristr( $url,'#',0)) {return;}
  
- 
- echo 'add url';
 	if(parse_url($pageUrl, PHP_URL_HOST) ==  parse_url($url, PHP_URL_HOST)){
 			$type = 'internal';
 		}else{
@@ -231,7 +229,6 @@ function addUrl($pageUrl,$url){
 	$query = "MATCH (u1:Url { href: {pageUrl}}), (u2:Url { href: {url}}) 
 	CREATE (u1)-[:references]->(u2)";//unique
 	$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"url"=>$url]);
-	 echo 'url added';
 }	
 function addAtts($pageUrl){
 	
@@ -273,13 +270,12 @@ function addAtts($pageUrl){
 				$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})
 				CREATE (g)-[:has_item]->(i:Item { itemID: {item}})";//		
 				$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item]);
-					echo '<hr>';
+				
 				foreach($value as $property => $content){	
-				echo '<br> pageurl{'.$pageUrl .'}---group: {'. $group.'}---item: {'. $item.'}---prop: {'. $property.'}---content: {'. str_replace( '&nbsp;', ' ', $content ).'}';
-
+				
 					$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})-[:has_item]->(i:Item { itemID: {item}})
 					CREATE (i)-[:has_property]->(p:Property {property:{property},content:{content}})";//		
-					$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item,"property"=>$property,"content"=>str_replace( '&nbsp;', ' ', $content )]);	
+					$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item,"property"=>$property,"content"=>$content]);	
 		
 				}		 
 			}	
