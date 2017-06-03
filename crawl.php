@@ -484,7 +484,7 @@ function stripHTML($html){
 				$check = trim($val);
 				$check = strtolower($check);
 				if($check == 'charset=utf-8'){
-					echo $charset = 'utf-8';					
+					$charset = 'utf-8';					
 				}			
 			}
 		}
