@@ -31,7 +31,7 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	
 	/* If the site has main elements, you can base page rank on this instead 
 	$query = "	
-	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'href') AND (n.href = 'href') AND NOT (links.content = 'nofollow'))
+	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'href') AND (n.href = links.property) AND NOT (links.content = 'nofollow'))
 	WITH n,lto, (1 / toFloat(count(distinct links))) * toFloat(count(distinct r)) AS pr
 	WITH n, SUM(pr) AS r
 	SET n.pr = r";
