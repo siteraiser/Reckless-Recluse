@@ -66,17 +66,17 @@ if(!empty($_GET['search'])) {
 
 	
 	OPTIONAL MATCH (linkednodes:Url)-[r]->(n)
-	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc,(CASE WHEN titlecount > 2 THEN 2 ELSE titlecount END) + (CASE WHEN desccount > 1 THEN 1 ELSE desccount END) + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank 
+	WITH DISTINCT n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc,(CASE WHEN titlecount > 2 THEN 2 ELSE titlecount END) + (CASE WHEN desccount > 1 THEN 1 ELSE desccount END) + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank 
 	OPTIONAL MATCH (linkstointernternal:Url {type: 'internal'})<-[]-(n)
-	WITH n, ln, lc, count(DISTINCT linkstointernternal) as lti, rank
+	WITH DISTINCT n, ln, lc, count(DISTINCT linkstointernternal) as lti, rank
 	OPTIONAL MATCH (linkstoexternternal:Url {type: 'external'})<-[]-(n)
-	WITH n, ln, lc, lti, count(DISTINCT linkstoexternternal) as lte, rank
+	WITH DISTINCT n, ln, lc, lti, count(DISTINCT linkstoexternternal) as lte, rank
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
-	WITH n, rank, ln, lti, lte, lc, title
+	WITH DISTINCT n, rank, ln, lti, lte, lc, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
-	WITH n, rank, ln, lti, lte, lc, title, description
+	WITH  DISTINCT n, rank, ln, lti, lte, lc, title, description
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
-	WITH n,rank, ln, lti, lte, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
+	WITH DISTINCT n,rank, ln, lti, lte, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 		
 	RETURN n.href, n.pr, rank, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 	ORDER BY rank DESC, n.pr DESC
@@ -142,7 +142,8 @@ if(!empty($_GET['search'])) {
 			}
 		}				
 		
-		$new = array_reverse($new, true);			
+		//$new = array_reverse($new, true);			
+		
 		foreach($new as $group => $items){
 			$out.='<div class="group">';
 			$out.='<h3>'.$group.'</h3>';
