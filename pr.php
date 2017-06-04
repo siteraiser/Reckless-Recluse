@@ -28,20 +28,16 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	WITH n, SUM(pr) AS r
 	SET n.pr = r";
 	$result1 = $neo4j->run($query);
-		
-		
 	
+	/* If the site has main elements, you can base page rank on this instead 
+	$query = "	
+	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links:Property {property: 'href'})
+	WITH n,lto, (1 / toFloat(count(distinct links))) * toFloat(count(distinct r)) AS pr
+	WITH n, SUM(pr) AS r
+	SET n.pr = r";
+	$result1 = $neo4j->run($query);
+	*/
 ?>
-<!doctype html>
-<html>
-<head>
-<style>
 
-</style>
-</head>
-
-<body>
 <h3>Page Rank Generated</h3>
 
-</body>
-</html>
