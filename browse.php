@@ -63,13 +63,14 @@ if(!empty($_GET['search'])) {
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'title') THEN 2 ELSE 0 END ) AS titlecount, 
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount,
 	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'h1s') THEN 1 ELSE 0 END ) AS h1scount
-		
+
+	
 	OPTIONAL MATCH (linkednodes:Url)-[r]->(n)
-	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc, titlecount, desccount, h1scount 
+	WITH n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc,(CASE WHEN titlecount > 2 THEN 2 ELSE titlecount END) + (CASE WHEN desccount > 1 THEN 1 ELSE desccount END) + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank 
 	OPTIONAL MATCH (linkstointernternal:Url {type: 'internal'})<-[]-(n)
-	WITH n, ln, lc, count(DISTINCT linkstointernternal) as lti, titlecount, desccount, h1scount 
+	WITH n, ln, lc, count(DISTINCT linkstointernternal) as lti, rank
 	OPTIONAL MATCH (linkstoexternternal:Url {type: 'external'})<-[]-(n)
-	WITH n, ln, lc, lti, count(DISTINCT linkstoexternternal) as lte, titlecount + desccount + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank
+	WITH n, ln, lc, lti, count(DISTINCT linkstoexternternal) as lte, rank
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
 	WITH n, rank, ln, lti, lte, lc, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
