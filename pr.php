@@ -31,8 +31,13 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	
 	/* If the site has main elements, you can base page rank on this instead 
 	$query = "	
-	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'href') AND (n.href = links.property) AND NOT (links.content = 'nofollow'))
-	WITH n,lto, (1 / toFloat(count(distinct links))) * toFloat(count(distinct r)) AS pr
+	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT (links.content = 'nofollow') )	
+	WITH collect(DISTINCT links.content) AS linkCollection
+	
+	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT (links.content = 'nofollow') AND NOT lto.href IN linkCollection )
+	WITH n, lto, r, links,collect(DISTINCT links.content) AS linkCollection, (1 / toFloat(count(distinct links))) * toFloat(count(distinct r)) AS pr
+	
+	MATCH (n) WHERE n.href IN linkCollection
 	WITH n, SUM(pr) AS r
 	SET n.pr = r";
 	$result1 = $neo4j->run($query);
