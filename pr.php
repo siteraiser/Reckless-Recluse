@@ -37,7 +37,18 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	SET r.rel = 'nofollow'
 	return r
 	
-	Then pick from buggy codes :D Might get this done soon, one can hope!
+	Then pick from buggy codes (first one seems legit) :D 
+	
+	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->(:Item)-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT r.rel = 'nofollow')	
+	WITH n, lto,r, links, collect(DISTINCT links.content) AS linkCollection2	
+	MATCH (n:Url)<-[:references {rel:''}]-(lto: Url {type: 'internal'})-[:has_group]->(:Group {group: 'mainlinks'})-[:has_item]->(:Item)-[:has_property]->(links2) WHERE (links2.property = 'href') AND n.href IN linkCollection2
+	WITH DISTINCT n,  toFloat(count(linkCollection2)) AS l2c, toFloat(count(DISTINCT r)) AS all
+	WITH DISTINCT n, CASE WHEN l2c = 0 THEN 0 ELSE 1 / l2c END * all AS pr	
+	WITH n, SUM(pr) AS r
+	SET n.pr = r
+	
+	
+	
 	
 	$query = "
 		MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT r.rel = 'nofollow') AND NOT (lto)-[]->(lto)
