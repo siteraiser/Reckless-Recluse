@@ -31,6 +31,14 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	
 	/* If the site has main elements, you can base page rank on this instead 
 	//set nofollows on relationships
+	MATCH (n:Url)<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'rel') AND (links.content = 'nofollow') )	
+	WITH n, lto, r, links, collect(DISTINCT links.content) AS linkCollection2
+	MATCH (n)<-[r:references]-(lto) WHERE n.href IN linkCollection2
+	SET r.rel = 'nofollow'
+	return r
+	
+	Then pick from buggy codes :D Might get this done soon, one can hope!
+	
 	$query = "
 		MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT r.rel = 'nofollow') AND NOT (lto)-[]->(lto)
 	
