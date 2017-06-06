@@ -19,7 +19,7 @@ use GraphAware\Neo4j\Client\ClientBuilder;
 
 
 $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->setDefaultTimeout(30)->build(); // Example for HTTP connection configuration (port is optional)	
-
+	//set nofollows on relationships
 	$query = "
 	MATCH (n:Url)<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'rel') AND (links.content = 'nofollow') )	
 	WITH n, lto, r, links, collect(DISTINCT links.content) AS linkCollection2
@@ -38,14 +38,7 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	$result1 = $neo4j->run($query);
 	
 	/* If the site has main elements, you can base page rank on this instead 
-	//set nofollows on relationships
-	MATCH (n:Url)<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'rel') AND (links.content = 'nofollow') )	
-	WITH n, lto, r, links, collect(DISTINCT links.content) AS linkCollection2
-	MATCH (n)<-[r:references]-(lto) WHERE n.href IN linkCollection2
-	SET r.rel = 'nofollow'
-	return r
-	
-	Then pick from buggy codes (first one seems legit) :D 
+
 	
 	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->(:Item)-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT r.rel = 'nofollow')	
 	WITH n, lto,r, links, collect(DISTINCT links.content) AS linkCollection2	
@@ -55,8 +48,8 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	WITH n, SUM(pr) AS r
 	SET n.pr = r
 	
-	
-	
+	//Or some other less accurate versions
+
 	
 	$query = "
 		MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT r.rel = 'nofollow') AND NOT (lto)-[]->(lto)
