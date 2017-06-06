@@ -62,7 +62,7 @@ $data['a'] = ['body'=>['.//a'=>['href']]];//['main'=>['.//a'=>['href']],'nav'=>[
 //$data['canonical'] = ['head'=>['//link[contains(attribute::rel, "canonical")]'=>['href']]];
 //$data['headerlinks'] = ['header'=>['.//a'=>['href']]];
 //$data['navlinks'] = ['nav'=>['.//a'=>['href']]];//$data['navlinks'] = ['nav[0]'=>['.//a'=>['href']]]; // or maybe  nav[position()=5]
-$data['mainlinks'] = ['main'=>['.//a'=>['href','innertext']]];
+$data['mainlinks'] = ['main'=>['.//a'=>['href','innertext','rel']]];
 //$data['asidelinks'] = ['aside'=>['.//a'=>['href','innertext']]];
 //$data['footerlinks'] = ['footer'=>['.//a'=>['href']]];
 $data['IFrames'] = ['body'=>['.//iframe'=>['src']]];
