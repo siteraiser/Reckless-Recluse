@@ -43,21 +43,20 @@ $crawl_level = 0;
  if(@$_GET['name'] !='') {
 	$reqs = array("{$_GET['name']}");
  }	else {
-	 exit;
-	 
+	 exit; 
  } 
-/**/ 
- if(@$_GET['levels'] !='') {
-	// $crawl_level = ($_GET['levels'] > 2 ? 3:$_GET['levels']) ;
+
+ if(@$_GET['levels'] !='') {	
 	$crawl_level = ($_GET['levels'] ? $_GET['levels'] : 0) ;
  }
+ 
 //https://www.w3.org/TR/xpath/#path-abbrev https://www.w3.org/TR/xpath/#location-paths
 $data['title'] = ['head'=>['//title'=>['text']]];
 $data['description'] = ['head'=>['//meta[@name="description"]'=>['content']]];
 $data['keywords'] = ['head'=>['//meta[contains(attribute::name, "keywords")]'=>['content']]];
 $data['h1s'] = ['body'=>['//h1'=>['text']]];
 //$data['script'] = ['query'=>['//script[contains(attribute::type, "application/ld+json")]'=>['innertext']]];
-$data['a'] = ['body'=>['.//a'=>['href']]];//['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
+$data['a'] = ['body'=>['.//a'=>['href']]];//['h2'=>['.//a'=>['href','title']]];//['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
 //$data['mobile'] = ['head'=>['//link[contains(attribute::rel, "alternate")]'=>['href']]];
 //$data['canonical'] = ['head'=>['//link[contains(attribute::rel, "canonical")]'=>['href']]];
 //$data['headerlinks'] = ['header'=>['.//a'=>['href']]];
@@ -151,8 +150,7 @@ class crawlLinks {
 			foreach($rows as $row){
 				$urls[] = $row['url'];
 			}
-		
-		
+				
 		return $urls;
 	}
 	
@@ -216,7 +214,7 @@ function addUrl($pageUrl,$url){
 			 $type = 'internal';
 		 }
 		 $query = "CREATE (url:Url { href: {pageUrl}, type:{type}})";
-		 $this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"type"=>$type]);
+		 $this->client->run($query,["pageUrl"=>$pageUrl,"type"=>$type]);
 	
 	}
 	if($this->urlNotFoundInGraph($url)){
@@ -224,11 +222,11 @@ function addUrl($pageUrl,$url){
 			 $type = 'external';
 		 }
 		 $query = "CREATE (url:Url { href: {url}, type:{type}})";
-		 $this->client->sendCypherQuery($query,["url"=>$url,"type"=>$type]);
+		 $this->client->run($query,["url"=>$url,"type"=>$type]);
 	}
 	$query = "MATCH (u1:Url { href: {pageUrl}}), (u2:Url { href: {url}}) 
 	CREATE (u1)-[:references]->(u2)";//unique
-	$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"url"=>$url]);
+	$this->client->run($query,["pageUrl"=>$pageUrl,"url"=>$url]);
 }	
 function addAtts($pageUrl){
 	
@@ -264,18 +262,18 @@ function addAtts($pageUrl){
 			
 			$query="MATCH (u:Url { href:{pageUrl}})
 			CREATE (u)-[:has_group]->(g:Group { group: {group}})";//		
-			$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group]);
+			$this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group]);
 		
 			foreach($items as $item => $value){	
 				$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})
 				CREATE (g)-[:has_item]->(i:Item { itemID: {item}})";//		
-				$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item]);
+				$this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item]);
 				
 				foreach($value as $property => $content){	
 				
 					$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})-[:has_item]->(i:Item { itemID: {item}})
 					CREATE (i)-[:has_property]->(p:Property {property:{property},content:{content}})";//		
-					$this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item,"property"=>$property,"content"=>$content]);	
+					$this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item,"property"=>$property,"content"=>$content]);	
 		
 				}		 
 			}	
@@ -291,7 +289,7 @@ function getPageList($type='internal'){
 		$urls=[];
 		$query="MATCH (u:Url) WHERE u.type = '".$type."'
 		RETURN u.href";
-		$result = $this->client->sendCypherQuery($query);
+		$result = $this->client->run($query);
 		foreach ($result->getRecords() as $record) {
 			$urls[] = $record->value('u.href');
 		}
@@ -303,7 +301,7 @@ function getAttList($pageUrl,$exclude=''){
 	
 	$query="
 	MATCH (u:Url{href:{pageUrl}})-[r1:has_group]->(g)-[r2:has_item]->(i) RETURN g.group AS groupname,i.itemID AS iid ORDER BY i.itemID";
-	$result = $this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl]);
+	$result = $this->client->run($query,["pageUrl"=>$pageUrl]);
 	foreach ($result->getRecords() as $record) {
 		$attsList[$record->value('groupname')][] = $record->value('iid');
 	}
@@ -327,7 +325,7 @@ function getAttList($pageUrl,$exclude=''){
 		
 		foreach($itemIDs as $itemID){
 			$query="MATCH (u:Url{href:{pageUrl}})-[r1:has_group]->(g:Group { group:{group}})-[r2:has_item]->(i:Item {itemID:{itemID}})-[:has_property]->(p) RETURN p.property AS pproperty, p.content AS pcontent ORDER BY i.itemID";
-			$result = $this->client->sendCypherQuery($query,["pageUrl"=>$pageUrl,"group"=>$group,"itemID"=>$itemID]);
+			$result = $this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"itemID"=>$itemID]);
 			foreach ($result->getRecords() as $record) {
 				if($record->value('pcontent') !=''){
 					$theseAtts[$group][][$record->value('pproperty')] =$record->value('pcontent');
@@ -362,7 +360,7 @@ function getAttList($pageUrl,$exclude=''){
 		RETURN n.href, c
 		ORDER BY c DESC
 		LIMIT 30";
-		$result = $this->client->sendCypherQuery($query);
+		$result = $this->client->run($query);
 		$node_options = '';
 		foreach ($result->getRecords() as $record) {
 		echo '<br>'.$record->value('n.href').'--'.$record->value('c');
@@ -374,11 +372,11 @@ function getAttList($pageUrl,$exclude=''){
 function setPagesWith404s(){
 	foreach($this->four04s as $url){
 		$query = "MATCH (u { href:{url} }) SET u.is404 = '1'";	
-		$this->client->sendCypherQuery($query,["url"=>$url]);			
+		$this->client->run($query,["url"=>$url]);			
 	}
 	foreach($this->redirected as $url){
 		$query = "MATCH (u { href:{url} }) SET u.redirected = '1'";	
-		$this->client->sendCypherQuery($query,["url"=>$url]);			
+		$this->client->run($query,["url"=>$url]);			
 	}
 }
 function getPagesWith404s(){
@@ -389,7 +387,7 @@ function getPagesWith404s(){
 	ORDER BY c DESC
 	LIMIT 50";
 	echo'<br>Pages containing 404s';
-	$result = $this->client->sendCypherQuery($query);
+	$result = $this->client->run($query);
 	foreach ($result->getRecords() as $record) {
 		echo '<br> 404: '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
 	}
@@ -404,7 +402,7 @@ function getPagesWithExternal404s(){
 	ORDER BY c DESC
 	LIMIT 50";
 	echo'<br>Pages containing 404s';
-	$result = $this->client->sendCypherQuery($query);
+	$result = $this->client->run($query);
 	foreach ($result->getRecords() as $record) {
 		echo '<br> 404: '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
 	}
@@ -414,7 +412,7 @@ function getPagesWithExternal404s(){
 	ORDER BY c DESC
 	LIMIT 50";
 	echo'<br>Pages containing redirected urls';
-	$result = $this->client->sendCypherQuery($query);
+	$result = $this->client->run($query);
 	foreach ($result->getRecords() as $record) {
 		echo '<br> URL is a redirect and : '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
 	}
@@ -450,7 +448,7 @@ function stripHTML($html){
 		$html = preg_replace('#<h4\s*/?>#i', "\n", $html);$html = preg_replace('#</h4>#i', "\n", $html);
 		$html = preg_replace('#<h5\s*/?>#i', "\n", $html);$html = preg_replace('#</h5>#i', "\n", $html);
 		$html = preg_replace('#<h6\s*/?>#i', "\n", $html);$html = preg_replace('#</h6>#i', "\n", $html);
-		$html = preg_replace('#<div\s*/?>#i', "\n", $html);$html = preg_replace('#</div>#i', "\n", $html);
+		$html = preg_replace('#<div\s*/?>#i', "\n", $html);$html = preg_replace('#</div>#i', "\n", $html)
 		
 		$content1=strip_tags($html);	
 		$order = array("\r\n", "\n", "\r","&nbsp;");
@@ -484,7 +482,7 @@ function stripHTML($html){
 				$check = trim($val);
 				$check = strtolower($check);
 				if($check == 'charset=utf-8'){
-					echo $charset = 'utf-8';					
+					$charset = 'utf-8';					
 				}			
 			}
 		}
