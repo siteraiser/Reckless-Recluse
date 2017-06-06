@@ -28,7 +28,7 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	return r
 	";
 	$result1 = $neo4j->run($query);
-
+	//Calculate Page Rank
 	$query = "	
 	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[rs:references]->(:Url)
 	WHERE NOT (lto)-[]->(lto) AND NOT rs.rel = 'nofollow'
