@@ -18,7 +18,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
 use GraphAware\Neo4j\Client\ClientBuilder;
 
 
-$neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->build(); // Example for HTTP connection configuration (port is optional)	
+$neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->setDefaultTimeout(30)->build(); // Example for HTTP connection configuration (port is optional)	
 
 
 	$query = "	
