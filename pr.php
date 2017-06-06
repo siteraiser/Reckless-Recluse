@@ -18,7 +18,7 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
 use GraphAware\Neo4j\Client\ClientBuilder;
 
 
-$neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->setDefaultTimeout(30)->build(); // Example for HTTP connection configuration (port is optional)	
+$neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->setDefaultTimeout(30)->build(); // Up the max ex. timeout. Example for HTTP connection configuration (port is optional)	
 	//set nofollows on relationships
 	$query = "
 	MATCH (n:Url)<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'rel') AND (links.content = 'nofollow') )	
@@ -37,7 +37,7 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	SET n.pr = r";
 	$result1 = $neo4j->run($query);
 	
-	/* If the site has main elements, you can base page rank on this instead 
+	/* If the site has main elements, you can base page rank on this instead or in addition (browse.php would likely need adjusting)
 
 	
 	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->(:Item)-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT r.rel = 'nofollow')	
