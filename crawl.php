@@ -53,7 +53,7 @@ $crawl_level = 0;
  }
 //https://www.w3.org/TR/xpath/#path-abbrev https://www.w3.org/TR/xpath/#location-paths
 $data['title'] = ['head'=>['//title'=>['text']]];
-$data['description'] = ['head'=>['//meta[contains(attribute::name, "description")]'=>['content']]];
+$data['description'] = ['head'=>['//meta[@name="description"]'=>['content']]];
 $data['keywords'] = ['head'=>['//meta[contains(attribute::name, "keywords")]'=>['content']]];
 $data['h1s'] = ['body'=>['//h1'=>['text']]];
 //$data['script'] = ['query'=>['//script[contains(attribute::type, "application/ld+json")]'=>['innertext']]];
