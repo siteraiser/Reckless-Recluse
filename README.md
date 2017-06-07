@@ -16,9 +16,9 @@ Below is an example of how to change crawl behavior to only crawl nav links and 
 
 $data['a'] = ['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
 
-And if you need to grab a few values in different forms, you could add in some more custom functionality like the included innertext function. Here's how to get the link and text (already included in the current script, innertext will get the text from any node): 
+And if you need to grab a few values in different forms, you could add in some more custom functionality like the included innertext function. Here's how to get link, text and rel attributes (already included in the current script, innertext will get the text from any node): 
 
-$data['mainlinks'] = ['main'=>['.//a'=>['href','innertext']]];
+$data['mainlinks'] = ['main'=>['.//a'=>['href','innertext','rel']]];
 
 ---
 Depending on website setup, you may want to change the useragent from the default mobile ua.
