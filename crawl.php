@@ -82,9 +82,8 @@ class crawlLinks {
 	public $start_url =""; 
 	public $base_url =""; //starting url
 	public $slash_only=true;//  true, false
-    public $data=[];
-    public $atts=[];
-  
+	public $data=[];
+	public $atts=[];  
 	public $capture = '';//all or null for default domain only, no 404s..
 	public $i=0;//levels 
 	public $four04s=[];
