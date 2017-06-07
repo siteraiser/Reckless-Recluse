@@ -448,7 +448,7 @@ function stripHTML($html){
 		$html = preg_replace('#<h4\s*/?>#i', "\n", $html);$html = preg_replace('#</h4>#i', "\n", $html);
 		$html = preg_replace('#<h5\s*/?>#i', "\n", $html);$html = preg_replace('#</h5>#i', "\n", $html);
 		$html = preg_replace('#<h6\s*/?>#i', "\n", $html);$html = preg_replace('#</h6>#i', "\n", $html);
-		$html = preg_replace('#<div\s*/?>#i', "\n", $html);$html = preg_replace('#</div>#i', "\n", $html)
+		$html = preg_replace('#<div\s*/?>#i', "\n", $html);$html = preg_replace('#</div>#i', "\n", $html);
 		
 		$content1=strip_tags($html);	
 		$order = array("\r\n", "\n", "\r","&nbsp;");
