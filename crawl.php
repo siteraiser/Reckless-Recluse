@@ -1,6 +1,6 @@
-<?php
+<?php error_reporting(0);
 /*	Copyright © 2017 
-	
+	//check line 680 (buf decode if there are encoding issues with links)
 	This file is part of Reckless Recluse.
     Reckless Recluse is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -84,7 +84,7 @@ class crawlLinks {
 	public $slash_only=true;//  true, false
 	public $data=[];
 	public $atts=[];  
-	public $capture = '';//all or null for default domain only, no 404s..
+	public $capture = 'all';//all or null for default domain only, no 404s..
 	public $i=0;//levels 
 	public $four04s=[];
 	public $redirected=[];
@@ -109,8 +109,9 @@ class crawlLinks {
 	
 //MySql-----------	
 	function inDB($table,$url){
+	//	echo"<span style='color:red;'>$url</span>";
 		$stmt =$this->pdo->prepare("SELECT * FROM $table WHERE url = ?");
-		$stmt->execute(array($url));
+		$stmt->execute(array(utf8_decode(html_entity_decode($url))));
 		$res = $stmt->fetch(PDO::FETCH_ASSOC);
 		
 		if(!empty($res)){
@@ -128,7 +129,7 @@ class crawlLinks {
 		(?)';	
 	
 		$stmt=$this->pdo->prepare($query);
-		$stmt->execute(array($url));
+		$stmt->execute(array(utf8_decode(html_entity_decode($url))));//urldecode(urlencode(
 		
 		return $url;
 	}	
@@ -147,9 +148,11 @@ class crawlLinks {
 		$stmt->execute(array());
 		$rows=$stmt->fetchAll(PDO::FETCH_ASSOC);
 			foreach($rows as $row){
-				$urls[] = $row['url'];
+				$urls[] = html_entity_decode(utf8_encode($row['url']));
 			}
-				
+		//	echo'<pre>';
+	//	var_dump($urls);
+		//echo'</pre>';
 		return $urls;
 	}
 	
@@ -163,6 +166,8 @@ class crawlLinks {
 //	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
 function urlNotFoundInGraph($url){
 	$query = "MATCH (url { href:{url} }) RETURN url.href, count(url) as count";
+	
+	
 	$result = $this->client->run($query,["url"=>$url]);
 	if(count($result->getRecord())===0 ){
 		return true;
@@ -201,6 +206,9 @@ function isFile($url){
 }
 
 function addUrl($pageUrl,$url){
+	
+	
+	
  if(stristr( $pageUrl,'#',0) || stristr( $url,'#',0)) {return;}
  
 	if(parse_url($pageUrl, PHP_URL_HOST) ==  parse_url($url, PHP_URL_HOST)){
@@ -255,7 +263,7 @@ function addAtts($pageUrl){
 				$groups[$group][]=$array;
 			}		
 		}			
-
+	
 				
 		foreach($groups as $group => $items){
 			
@@ -268,16 +276,19 @@ function addAtts($pageUrl){
 				CREATE (g)-[:has_item]->(i:Item { itemID: {item}})";//		
 				$this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item]);
 				
-				foreach($value as $property => $content){	
 				
+			
+				
+				foreach($value as $property => $content){	
 					$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})-[:has_item]->(i:Item { itemID: {item}})
 					CREATE (i)-[:has_property]->(p:Property {property:{property},content:{content}})";//		
 					$this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item,"property"=>$property,"content"=>$content]);	
 		
 				}		 
+				
 			}	
 		}
-		
+	
 			
 	}
 	
@@ -513,7 +524,7 @@ function stripHTML($html){
 								}else if($attribute == 'href'){//Make a fqurl
 									$url = $e->getAttribute($attribute);
 									
-									$url =  (strtolower($charset) == 'utf-8'? $url :  utf8_decode($url));
+								$url =  (strtolower($charset) == 'utf-8'? $url : utf8_decode($url));////urldecode( ////utf8_decode(html_entity_decode(
 									if(strpos($url, '#') === 0 || strpos($url, '?') === 0){ /* & group =='a' ..? */
 										
 										$path =parse_url($pageUrl, PHP_URL_SCHEME).	'://'.	parse_url($pageUrl, PHP_URL_HOST).	parse_url($pageUrl, PHP_URL_PATH);
@@ -580,6 +591,8 @@ function stripHTML($html){
 	public function include_dirs($url){ // crawl dir only
 		
 		foreach($this->include_dirs as $dir){
+			//echo'<hr>'.$dir .'<br>';
+			//echo $url;
 			if(substr( $url , 0, strlen($dir) ) !== $dir){
 				return false;
 			}
@@ -664,7 +677,7 @@ function encodeURI($url) {
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-		$buf = curl_exec($ch);
+		$buf = utf8_decode(htmlspecialchars_decode(curl_exec($ch)));//utf8_decode(html_entity_decode(curl_exec($ch)))
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);				
 		$redirect_url = curl_getinfo($ch,CURLINFO_REDIRECT_URL);//CURLINFO_EFFECTIVE_URL -> for curl follow loca... 
 				
@@ -705,7 +718,7 @@ function encodeURI($url) {
 			ob_end_flush();
 			ob_start();
 			ob_implicit_flush();		
-			echo $pageUrl .'<br>';	
+			echo '<span style="color:green;">'.$pageUrl .'</span><br>';	
 			ob_flush();
 			flush();
 			
@@ -785,10 +798,11 @@ CREATE TABLE `crawl`.`crawled` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VA
 					$path = end($path);																			
 					$url = ($host == '' & (! stristr( $href,'#',0) ) ?  rtrim($this->base_url, '/').'/' : '' ).ltrim($path,'/');
 					
-					$url = $this->addSlash($url);
+				$url = $this->addSlash($url);
+			//	echo'<hr><hr>'.	$url;
 					//Build to crawl list	
-					if (!stristr( $href,'#',0) && !filter_var($url, FILTER_VALIDATE_URL) === false && ($host == parse_url($this->start_url, PHP_URL_HOST) || $host == '') && ! $this->inDB('urls_captured',$url) && ! $this->inDB('crawled',$url) && ! in_array($url,$this->four04s) && ! in_array($url,$this->redirected)) {								
-						
+					if (!stristr( $href,'#',0) && !filter_var($this->encodeURI($url), FILTER_VALIDATE_URL) === false && ($host == parse_url($this->start_url, PHP_URL_HOST) || $host == '') && ! $this->inDB('urls_captured',$url) && ! $this->inDB('crawled',$url) && ! in_array($url,$this->four04s) && ! in_array($url,$this->redirected)) {								
+					
 						if(  $this->exclude_dirs($url) && $this->include_dirs($url) && ! stristr( strtolower( $url),'.pdf',0) && ! stristr( strtolower( $url),'.jpg',0) && ! stristr( strtolower( $url),'.png',0)){
 							
 							$this->addUrlToTable('to_crawl',$url);
