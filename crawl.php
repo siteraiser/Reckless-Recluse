@@ -461,10 +461,12 @@ function stripHTML($html){
 		$html = preg_replace('#<div\s*/?>#i', "\n", $html);$html = preg_replace('#</div>#i', "\n", $html);
 		
 		$content1=strip_tags($html);	
-		$order = array("\r\n", "\n", "\r","&nbsp;");
+		$order = array("\r\n", "\n", "\r");
 		$replace = ' ';
 		// Processes \r\n's first so they aren't converted twice.
 		$content1 = str_replace($order, $replace, $content1);
+		//&nbsp replacement from: https://stackoverflow.com/questions/28704562/how-to-remove-nbsp-from-a-utf-8-string		
+		$content1 = str_replace("\xc2\xa0",' ',$content1); 		
 				
 		return $content1;
 }	 
