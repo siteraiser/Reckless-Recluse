@@ -1,4 +1,4 @@
-<?php error_reporting(0);
+<?php //error_reporting(0);
 /*	Copyright © 2017 
 	//check line 680 (buf decode if there are encoding issues with links)
 	This file is part of Reckless Recluse.
@@ -35,8 +35,21 @@ Check External:<input type="checkbox" name="external" <?php echo (@$_GET['extern
 ini_set('max_execution_time', $maxextime = 1800); //seconds
 ini_set('memory_limit','2048M');//2048M4096M
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
+
+
+
+
+/* old
 use GraphAware\Neo4j\Client\ClientBuilder;
+*/
 //$this->client = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@172.76.227.199')->build(); // Example for HTTP connection configuration (port is optional)	
+
+
+use Laudis\Neo4j\Authentication\Authenticate;
+use Laudis\Neo4j\ClientBuilder;
+
+
+
 $curl_timeout = @$_GET['download_timeout'];//seconds
 //$reqs = array("http://example.com/");
 $crawl_level = 0;
@@ -92,11 +105,22 @@ class crawlLinks {
 	public $otherErrors=[];
 	public $curl_timeout = 5000;//5 seconds default
 	public $include_dirs=[];//array('http://www.example.com/products-and-services/');//[]; 
-	public $exclude_dirs=[];// array('http://www.example.com/products-and-services/web-development');//[]; 
+	public $exclude_dirs=array('https://www.siteraiser.com/book');// array('http://www.example.com/products-and-services/web-development');//[]; 
 	public $uagent ='Mozilla/5.0 (Linux; U; Android 2.2.1; en-us; MB525 Build/3.4.2-107_JDN-9) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1';
 		
 	public function __construct(){	
+	
+	/* old
 		$this->client = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->build(); // Example for HTTP connection configuration (port is optional)	
+	*/	 
+	$this->client = ClientBuilder::create()
+   ->withDriver('bolt', 'bolt://superuser:admin@localhost:7687') // creates a bolt driver
+   //  ->withDriver('https', 'https://localhost:7474', Authenticate::basic('superuser', 'admin')) // creates an http driver
+   // ->withDriver('neo4j', 'neo4j://neo4j.test.com?database=my-database', Authenticate::oidc('token')) // creates an auto routed driver with an OpenID Connect token
+  ->withDefaultDriver('bolt')
+    ->build();	 
+		 
+		 
 		 
 		 
 		try {
@@ -165,13 +189,21 @@ class crawlLinks {
 	
 //	CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;
 function urlNotFoundInGraph($url){
-	$query = "MATCH (url { href:{url} }) RETURN url.href, count(url) as count";
+	$query = 'MATCH (url { href:$url }) RETURN url.href, count(url) as count';
 	
 	
-	$result = $this->client->run($query,["url"=>$url]);
-	if(count($result->getRecord())===0 ){
+	$results = $this->client->run($query,["url"=>$url]);
+	
+
+
+
+
+
+	if($results->count() === 0){
+		
 		return true;
 	}else{
+		
 		return false;
 	}
 }	
@@ -220,7 +252,7 @@ function addUrl($pageUrl,$url){
 		 if(parse_url($pageUrl, PHP_URL_HOST) == parse_url($this->start_url, PHP_URL_HOST)){
 			 $type = 'internal';
 		 }
-		 $query = "CREATE (url:Url { href: {pageUrl}, type:{type}})";
+		 $query = 'CREATE (url:Url { href: $pageUrl, type:$type})';
 		 $this->client->run($query,["pageUrl"=>$pageUrl,"type"=>$type]);
 	
 	}
@@ -228,11 +260,11 @@ function addUrl($pageUrl,$url){
 		 if(parse_url($url, PHP_URL_HOST) != parse_url($this->start_url, PHP_URL_HOST)){
 			 $type = 'external';
 		 }
-		 $query = "CREATE (url:Url { href: {url}, type:{type}})";
+		 $query = 'CREATE (url:Url { href: $url, type:$type})';
 		 $this->client->run($query,["url"=>$url,"type"=>$type]);
 	}
-	$query = "MATCH (u1:Url { href: {pageUrl}}), (u2:Url { href: {url}}) 
-	CREATE (u1)-[:references]->(u2)";//unique
+	$query = 'MATCH (u1:Url { href: $pageUrl}), (u2:Url { href: $url}) 
+	CREATE (u1)-[:references]->(u2)';//unique
 	$this->client->run($query,["pageUrl"=>$pageUrl,"url"=>$url]);
 }	
 function addAtts($pageUrl){
@@ -267,21 +299,21 @@ function addAtts($pageUrl){
 				
 		foreach($groups as $group => $items){
 			
-			$query="MATCH (u:Url { href:{pageUrl}})
-			CREATE (u)-[:has_group]->(g:Group { group: {group}})";//		
+			$query='MATCH (u:Url { href:$pageUrl})
+			CREATE (u)-[:has_group]->(g:Group { group: $group})';//		
 			$this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group]);
 		
 			foreach($items as $item => $value){	
-				$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})
-				CREATE (g)-[:has_item]->(i:Item { itemID: {item}})";//		
+				$query='MATCH  (u:Url { href:$pageUrl})-[:has_group]->(g:Group { group:$group})
+				CREATE (g)-[:has_item]->(i:Item { itemID: $item})';//		
 				$this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item]);
 				
 				
 			
 				
 				foreach($value as $property => $content){	
-					$query="MATCH  (u:Url { href:{pageUrl}})-[:has_group]->(g:Group { group:{group}})-[:has_item]->(i:Item { itemID: {item}})
-					CREATE (i)-[:has_property]->(p:Property {property:{property},content:{content}})";//		
+					$query='MATCH  (u:Url { href:$pageUrl})-[:has_group]->(g:Group { group:$group})-[:has_item]->(i:Item { itemID: $item})
+					CREATE (i)-[:has_property]->(p:Property {property:$property,content:$content})';//		
 					$this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"item"=>$item,"property"=>$property,"content"=>$content]);	
 		
 				}		 
@@ -299,21 +331,35 @@ function getPageList($type='internal'){
 		$urls=[];
 		$query="MATCH (u:Url) WHERE u.type = '".$type."'
 		RETURN u.href";
-		$result = $this->client->run($query);
+		$results = $this->client->run($query);
+		
+		
+		
+		
+			// A row is a \Laudis\Neo4j\Types\CypherMap
+foreach ($results as $result) {
+
+ $urls[] = $result->get('u.href');
+  
+}
+	
+	/*	
+		
 		foreach ($result->getRecords() as $record) {
 			$urls[] = $record->value('u.href');
 		}
+		*/
 		return $urls;
 }
 function getAttList($pageUrl,$exclude=''){
 	
 	$attsList=[];
 	
-	$query="
-	MATCH (u:Url{href:{pageUrl}})-[r1:has_group]->(g)-[r2:has_item]->(i) RETURN g.group AS groupname,i.itemID AS iid ORDER BY i.itemID";
-	$result = $this->client->run($query,["pageUrl"=>$pageUrl]);
-	foreach ($result->getRecords() as $record) {
-		$attsList[$record->value('groupname')][] = $record->value('iid');
+	$query='
+	MATCH (u:Url{href:$pageUrl})-[r1:has_group]->(g)-[r2:has_item]->(i) RETURN g.group AS groupname,i.itemID AS iid ORDER BY i.itemID';
+	$results = $this->client->run($query,["pageUrl"=>$pageUrl]);
+foreach ($results as $result) {
+		$attsList[$result->get('groupname')][] = $result->get('iid');
 	}
 	
 	$attsListO=[];
@@ -334,11 +380,11 @@ function getAttList($pageUrl,$exclude=''){
 	foreach ($attsListO as $group => $itemIDs) {
 		
 		foreach($itemIDs as $itemID){
-			$query="MATCH (u:Url{href:{pageUrl}})-[r1:has_group]->(g:Group { group:{group}})-[r2:has_item]->(i:Item {itemID:{itemID}})-[:has_property]->(p) RETURN p.property AS pproperty, p.content AS pcontent ORDER BY i.itemID";
-			$result = $this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"itemID"=>$itemID]);
-			foreach ($result->getRecords() as $record) {
-				if($record->value('pcontent') !=''){
-					$theseAtts[$group][][$record->value('pproperty')] =$record->value('pcontent');
+			$query='MATCH (u:Url{href:$pageUrl})-[r1:has_group]->(g:Group { group:$group})-[r2:has_item]->(i:Item {itemID:$itemID})-[:has_property]->(p) RETURN p.property AS pproperty, p.content AS pcontent ORDER BY i.itemID';
+			$results = $this->client->run($query,["pageUrl"=>$pageUrl,"group"=>$group,"itemID"=>$itemID]);
+			foreach ($results as $result) {
+				if($result->get('pcontent') !=''){
+					$theseAtts[$group][][$result->get('pproperty')] =$result->get('pcontent');
 				}
 			}
 		}
@@ -357,8 +403,17 @@ function getAttList($pageUrl,$exclude=''){
 		
 		$query = "MATCH (n)
 		DETACH DELETE n";
-		$result = $this->client->run($query);
-		if(count($result->getRecord())===0 ){
+		$results = $this->client->run($query);
+		
+		//echo '<pre>';
+	//	var_dump($result);
+	//	echo '</pre>';
+	
+	
+
+
+	
+		if(count($results)===0 ){
 			return true;
 		}else{
 			return false;
@@ -372,8 +427,8 @@ function getAttList($pageUrl,$exclude=''){
 		LIMIT 30";
 		$result = $this->client->run($query);
 		$node_options = '';
-		foreach ($result->getRecords() as $record) {
-		echo '<br>'.$record->value('n.href').'--'.$record->value('c');
+		foreach ($results as $result) {
+		echo '<br>'.$result->get('n.href').'--'.$result->get('c');
 		}
 	}
 	
@@ -381,11 +436,11 @@ function getAttList($pageUrl,$exclude=''){
 	
 function setPagesWith404s(){
 	foreach($this->four04s as $url){
-		$query = "MATCH (u { href:{url} }) SET u.is404 = '1'";	
+		$query = 'MATCH (u { href:$url }) SET u.is404 = "1"';	
 		$this->client->run($query,["url"=>$url]);			
 	}
 	foreach($this->redirected as $url){
-		$query = "MATCH (u { href:{url} }) SET u.redirected = '1'";	
+		$query = 'MATCH (u { href:$url }) SET u.redirected = "1"';	
 		$this->client->run($query,["url"=>$url]);			
 	}
 }
@@ -398,8 +453,8 @@ function getPagesWith404s(){
 	LIMIT 50";
 	echo'<br>Pages containing 404s';
 	$result = $this->client->run($query);
-	foreach ($result->getRecords() as $record) {
-		echo '<br> 404: '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
+	foreach ($results as $result) {
+		echo '<br> 404: '.$result->get('n.href').' is on page '.$result->get('n2.href').'--'.$result->get('c');
 	}
 		
 	
@@ -413,8 +468,8 @@ function getPagesWithExternal404s(){
 	LIMIT 50";
 	echo'<br>Pages containing 404s';
 	$result = $this->client->run($query);
-	foreach ($result->getRecords() as $record) {
-		echo '<br> 404: '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
+	foreach ($results as $result) {
+		echo '<br> 404: '.$result->get('n.href').' is on page '.$result->get('n2.href').'--'.$result->get('c');
 	}
 	$query = "MATCH (n:Url { redirected: '1'})<-[r]-(n2:Url) WHERE n.type = 'external' AND n2.type = 'internal'
 	WITH n,n2, count(r) as c
@@ -423,8 +478,8 @@ function getPagesWithExternal404s(){
 	LIMIT 50";
 	echo'<br>Pages containing redirected urls';
 	$result = $this->client->run($query);
-	foreach ($result->getRecords() as $record) {
-		echo '<br> URL is a redirect and : '.$record->value('n.href').' is on page '.$record->value('n2.href').'--'.$record->value('c');
+	foreach ($results as $result) {
+		echo '<br> URL is a redirect and : '.$result->get('n.href').' is on page '.$result->get('n2.href').'--'.$result->get('c');
 	}
 	
 }	
@@ -684,6 +739,10 @@ function encodeURI($url) {
 		$redirect_url = curl_getinfo($ch,CURLINFO_REDIRECT_URL);//CURLINFO_EFFECTIVE_URL -> for curl follow loca... 
 				
 		curl_close($ch);
+			
+			
+			
+			
 			
 		// Close handle
 		if($httpCode == 200 || $httpCode > 400){				
