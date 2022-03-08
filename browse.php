@@ -15,9 +15,8 @@
 */
 
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
+
 use GraphAware\Neo4j\Client\ClientBuilder;
-
-
 $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->build(); // Example for HTTP connection configuration (port is optional)	
 
 $results_per_page=5;
@@ -37,51 +36,51 @@ if(!empty($_GET['search'])) {
 }
 	
 	
-	$query = "	
+	$query = '	
 	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
-	WHERE ((p.content =~ {search} AND g.group = 'title')
-	OR (p.content =~ {search} AND g.group = 'description')
-	OR (p.content =~ {search} AND g.group = 'h1s')) 
-	AND NOT EXISTS(n.is404) AND n.type = 'internal'
-	RETURN count(DISTINCT n)";
+	WHERE ((p.content =~ $search AND g.group = "title")
+	OR (p.content =~ $search AND g.group = "description")
+	OR (p.content =~ $search AND g.group = "h1s")) 
+	AND NOT EXISTS(n.is404) AND n.type = "internal"
+	RETURN count(DISTINCT n)';
 	
-	$result1 = $neo4j->run($query,["search"=>"(?i).*$search.*"]);
+	$results1 = $neo4j->run($query,["search"=>"(?i).*$search.*"]);
 		
-	foreach ($result1->getRecords() as $record1) {
-		$count = $record1->value('count(DISTINCT n)');
+foreach ($results1 as $result1) {
+		$count = $result1->get('count(DISTINCT n)');
 	}
 		
-	$query = "
+	$query = '
 	MATCH (n:Url)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p)
-	WHERE ((p.content =~ {search} AND g.group = 'title')
-	OR (p.content =~ {search} AND g.group = 'description')
-	OR (p.content =~ {search} AND g.group = 'h1s')) 
-	AND NOT EXISTS(n.is404) AND n.type = 'internal'
+	WHERE ((p.content =~ $search AND g.group = "title")
+	OR (p.content =~ $search AND g.group = "description")
+	OR (p.content =~ $search AND g.group = "h1s")) 
+	AND NOT EXISTS(n.is404) AND n.type = "internal"
 	
 	WITH DISTINCT n, 
 		
-	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'title') THEN 2 ELSE 0 END ) AS titlecount, 
-	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'description') THEN 1 ELSE 0 END ) AS desccount,
-	SUM(CASE WHEN (p.content =~ {search} AND g.group = 'h1s') THEN 1 ELSE 0 END ) AS h1scount
+	SUM(CASE WHEN (p.content =~ $search AND g.group = "title") THEN 2 ELSE 0 END ) AS titlecount, 
+	SUM(CASE WHEN (p.content =~ $search AND g.group = "description") THEN 1 ELSE 0 END ) AS desccount,
+	SUM(CASE WHEN (p.content =~ $search AND g.group = "h1s") THEN 1 ELSE 0 END ) AS h1scount
 
 	
 	OPTIONAL MATCH (linkednodes:Url)-[r]->(n)
 	WITH DISTINCT n, count(DISTINCT linkednodes) as ln, count(DISTINCT r) as lc,(CASE WHEN titlecount > 2 THEN 2 ELSE titlecount END) + (CASE WHEN desccount > 1 THEN 1 ELSE desccount END) + (CASE WHEN h1scount > 1 THEN 1 ELSE h1scount END) AS rank 
-	OPTIONAL MATCH (linkstointernternal:Url {type: 'internal'})<-[]-(n)
+	OPTIONAL MATCH (linkstointernternal:Url {type: "internal"})<-[]-(n)
 	WITH DISTINCT n, ln, lc, count(DISTINCT linkstointernternal) as lti, rank
-	OPTIONAL MATCH (linkstoexternternal:Url {type: 'external'})<-[]-(n)
+	OPTIONAL MATCH (linkstoexternternal:Url {type: "external"})<-[]-(n)
 	WITH DISTINCT n, ln, lc, lti, count(DISTINCT linkstoexternternal) as lte, rank
-	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = 'title'
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = "title"
 	WITH DISTINCT n, rank, ln, lti, lte, lc, title
-	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = 'description'
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = "description"
 	WITH  DISTINCT n, rank, ln, lti, lte, lc, title, description
-	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = 'title' OR g.group ='description' OR g.group ='a')
+	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = "title" OR g.group ="description" OR g.group ="a")
 	WITH DISTINCT n,rank, ln, lti, lte, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 		
 	RETURN n.href, n.pr, rank, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 	ORDER BY rank DESC, n.pr DESC
 	SKIP {skip}
-	LIMIT {rpp}";
+	LIMIT {rpp}';
 		
 	$result = $neo4j->run($query,["search"=>"(?i).*$search.*","skip"=>$skip,"rpp"=>$results_per_page]);//'(?i).*
 	
