@@ -895,7 +895,7 @@ foreach($Crawl->GetUrls('to_crawl') as $url){
 <h2 id="urlsCrawled">urlsCrawled</h2><div>
 <?php
 foreach($Crawl->GetUrls('crawled') as $url){
-	echo  '<div><a href='.$url.'>'.$url.'</a></div>';	
+	echo  '<div><a href="'.$url.'">'.$url.'</a></div>';	
 }
 ?>
 </div>
@@ -952,7 +952,7 @@ if(@$_GET['external']){
 			$url = $Crawl->addSlash($url);
 			
 			if($url !=''){
-				echo  '<div><a href='.$url.'>'.$url.'</a> '. $Crawl->checkUrl([$url]).'</div>';		 
+				echo  '<div><a href="'.$url.'">'.$url.'</a> '. $Crawl->checkUrl([$url]).'</div>';		 
 			
 				echo '<pre>';
 				echo htmlspecialchars(print_r($Crawl->redirectsTo, true));
