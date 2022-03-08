@@ -15,10 +15,24 @@
 */
 
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
+
+
+/* old
+
 use GraphAware\Neo4j\Client\ClientBuilder;
 
 
 $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->setDefaultTimeout(30)->build(); // Up the max ex. timeout. Example for HTTP connection configuration (port is optional)	
+
+*/
+
+	$neo4j = ClientBuilder::create()
+    ->withDriver('bolt', 'bolt://superuser:admin@localhost:7687') // creates a bolt driver
+   //  ->withDriver('https', 'https://localhost:7474', Authenticate::basic('superuser', 'admin')) // creates an http driver
+   // ->withDriver('neo4j', 'neo4j://neo4j.test.com?database=my-database', Authenticate::oidc('token')) // creates an auto routed driver with an OpenID Connect token
+  ->withDefaultDriver('bolt')
+    ->build();	  
+
 	//set nofollows on relationships
 	$query = "
 	MATCH (n:Url)<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'rel') AND (links.content = 'nofollow') )	
