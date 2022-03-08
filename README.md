@@ -1,18 +1,17 @@
-# Reckless-Recluse
-
-There is a newer version for the updated Neo4J php client here: https://github.com/siteraiser/Reckless-Recluse-V1.1. 
+# Reckless-Recluse-V1.1
+Updated for new Neo4J connector
 
 A powerful php crawler designed to dig up site problems. 
 
 Requirements:
-mysql, neo4j 2.3+ and php
+mysql, neo4j 4+ and php7
 
 You will have to create 3 mysql tables as is (recommended collation: utf8mb4_unicode_ci). (db name:crawl)... 
 CREATE TABLE `crawl`.`urls_captured` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`to_crawl` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`crawled` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 
-And just one Neo4j db (password:admin). But you'll have to add a vendor folder with the php cypher extensions. Which can be found here: https://github.com/graphaware/neo4j-php-client
+And just one Neo4j db, set user/pass details in connection area. You'll have to add a vendor folder with the php cypher extensions. Which can be found here: https://github.com/neo4j-php/neo4j-php-client
 
 After it's up and running, you can use xpath queries to choose what content to save into the database, also what will appear in the reports. 
 Below is an example of how to change crawl behavior to only crawl nav links and links inside of a main element (the 'a' group is used to crawl urls, other groups will only show up in the page reports). The other gathered info will also be saved to the graph. 
