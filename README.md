@@ -4,7 +4,7 @@ A powerful php crawler designed to dig up site problems.
 Requirements:
 mysql, neo4j 2.3+ and php
 
-You will have to create 3 mysql tables as is (db name:crawl)... 
+You will have to create 3 mysql tables as is (recommended collation: utf8mb4_unicode_ci). (db name:crawl)... 
 CREATE TABLE `crawl`.`urls_captured` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`to_crawl` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`crawled` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
