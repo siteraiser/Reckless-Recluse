@@ -1,4 +1,7 @@
 # Reckless-Recluse
+
+There is a newer version for the updated Neo4J php client here: https://github.com/siteraiser/Reckless-Recluse-V1.1. 
+
 A powerful php crawler designed to dig up site problems. 
 
 Requirements:
