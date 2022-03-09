@@ -1,4 +1,4 @@
-<?php
+<?php error_reporting(0);
 /*	Copyright © 2017 
 	
 	This file is part of Reckless Recluse.
