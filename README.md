@@ -6,7 +6,10 @@ A powerful php crawler designed to dig up site problems.
 Requirements:
 mysql, neo4j 4+ and php7
 
-You will have to create 3 mysql tables as is (recommended collation: utf8mb4_unicode_ci). (db name:crawl)... 
+You will have to create 3 mysql tables as is (recommended collation: utf8mb4_unicode_ci). 
+
+(db name:crawl)... 
+
 CREATE TABLE `crawl`.`urls_captured` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`to_crawl` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`crawled` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
@@ -25,3 +28,5 @@ $data['mainlinks'] = ['main'=>['.//a'=>['href','innertext','rel']]];
 ---
 Depending on website setup, you may want to change the useragent from the default mobile ua.
 To enable external url check, change setting to crawlLinks->capture = 'all', '' is default.
+
+After succesfully crawling a website, page rank will be generated and you can then head to the browse.php file to search and see what the rank for each page is. 
