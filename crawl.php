@@ -89,7 +89,7 @@ class StopWatch {
   }
 }
 class crawlLinks {  
-	private $client;// neo4j
+	public $client;// neo4j
 	private $pdo;
 	
 	public $start_url =""; 
