@@ -157,13 +157,7 @@ foreach ($results1 as $result1) {
 		var_dump($properties);
 		echo '</pre>';
 */		
-		
-		
-		
-		
-		
 	
-		
 		
 		$new =[];				
 		$subGroup = array_reverse($subGroup, true);		
