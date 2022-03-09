@@ -105,9 +105,10 @@ foreach ($results1 as $result1) {
 		.'<br>';
 		
 		
-		$groups=[];$subGroup=[];$properties=[];
+		$groups=[];$subGroup=[];$props=[];
 		if($result->get('itemlist') !== ''){
 			foreach($result->get('itemlist') as $key => $item){
+				
 				if($key=='items'){					
 
 					foreach($item as $k => $itemID){
@@ -138,26 +139,37 @@ foreach ($results1 as $result1) {
 		}
 		
 		
-		
+		$properties=[];
 			foreach( $props as $att){		
 				if(! IS_numeric( $att))	{
+					
+				$temp=[];
 					foreach( $att as $blah){						
 						if($blah != 'Property' && $blah != ''){								
-							$temp[] =$blah;				
+							$temp[] =$blah;//echo '<br>'.						
 						}						
 					}	
 					if($temp[0] != ''){		
 						$properties[]=['property'=>$temp[0],'content'=>$temp[1]];
-					}			
+					}
+			
 				}		
 			}
 		
-	/*	
+
 		echo '<pre>';
 		var_dump($properties);
 		echo '</pre>';
-*/		
+	/*	*/		
+			echo '<pre>--';
+		var_dump($subGroup);
+		echo '</pre>';
+		
+		
+	echo '<hr>';
+		
 	
+		
 		
 		$new =[];				
 		$subGroup = array_reverse($subGroup, true);		
