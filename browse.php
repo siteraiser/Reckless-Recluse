@@ -15,9 +15,18 @@
 */
 
 require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
-
+/* old
 use GraphAware\Neo4j\Client\ClientBuilder;
 $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->build(); // Example for HTTP connection configuration (port is optional)	
+*/
+
+	$neo4j = ClientBuilder::create()
+    ->withDriver('bolt', 'bolt://superuser:admin@localhost:7687') // creates a bolt driver
+   //  ->withDriver('https', 'https://localhost:7474', Authenticate::basic('superuser', 'admin')) // creates an http driver
+   // ->withDriver('neo4j', 'neo4j://neo4j.test.com?database=my-database', Authenticate::oidc('token')) // creates an auto routed driver with an OpenID Connect token
+  ->withDefaultDriver('bolt')
+    ->build();	
+
 
 $results_per_page=5;
 
@@ -79,8 +88,8 @@ foreach ($results1 as $result1) {
 		
 	RETURN n.href, n.pr, rank, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
 	ORDER BY rank DESC, n.pr DESC
-	SKIP {skip}
-	LIMIT {rpp}';
+	SKIP $skip
+	LIMIT $rpp';
 		
 	$result = $neo4j->run($query,["search"=>"(?i).*$search.*","skip"=>$skip,"rpp"=>$results_per_page]);//'(?i).*
 	
