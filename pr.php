@@ -44,11 +44,13 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	$result1 = $neo4j->run($query);
 	//Calculate Page Rank
 	$query = "	
-	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[rs:references]->(:Url)
-	WHERE NOT rs.rel = 'nofollow'//NOT (lto)-[]->(lto) AND 
+	OPTIONAL MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[rs:references]->(:Url)
+	WHERE rs.rel is null or NOT rs.rel = 'nofollow'
 	WITH n,lto, (1 / toFloat(count(distinct rs))) * toFloat(count(distinct r)) AS pr
 	WITH n, SUM(pr) AS r
-	SET n.pr = r";
+	SET n.pr = r
+	
+	return n";
 	$result1 = $neo4j->run($query);
 	
 	/* If the site has main elements, you can base page rank on this instead or in addition (browse.php would likely need adjusting)
