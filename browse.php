@@ -19,7 +19,8 @@ require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
 use GraphAware\Neo4j\Client\ClientBuilder;
 $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->build(); // Example for HTTP connection configuration (port is optional)	
 */
-
+use Laudis\Neo4j\Authentication\Authenticate;
+use Laudis\Neo4j\ClientBuilder;
 	$neo4j = ClientBuilder::create()
     ->withDriver('bolt', 'bolt://superuser:admin@localhost:7687') // creates a bolt driver
    //  ->withDriver('https', 'https://localhost:7474', Authenticate::basic('superuser', 'admin')) // creates an http driver
@@ -91,22 +92,22 @@ foreach ($results1 as $result1) {
 	SKIP $skip
 	LIMIT $rpp';
 		
-	$result = $neo4j->run($query,["search"=>"(?i).*$search.*","skip"=>$skip,"rpp"=>$results_per_page]);//'(?i).*
+	$results = $neo4j->run($query,["search"=>"(?i).*$search.*","skip"=>$skip,"rpp"=>$results_per_page]);//'(?i).*
 	
 	$out='';
-	foreach ($result->getRecords() as $record) {
-		$out.='<hr><div class="page"><h2><a href="'.$record->value('n.href').'">'
-		.($record->value('title.content') == ''? 'null' : $record->value('title.content'))
+	foreach ($results as $result) {
+		$out.='<hr><div class="page"><h2><a href="'.$result->get('n.href').'">'
+		.($result->get('title.content') == ''? 'null' : $result->get('title.content'))
 		.'</a></h2>' 
-		.'<h4 id="stats">Page Rank: '.$record->value('n.pr').' - Unique Page Links: '.$record->value('ln').' - Total Links: '.$record->value('lc').' - Links to internal: '.$record->value('lti').' - Links to external: '.$record->value('lte').'  - T2+D1+H1s1 Score: '.$record->value('rank')
+		.'<h4 id="stats">Page Rank: '.$result->get('n.pr').' - Unique Page Links: '.$result->get('ln').' - Total Links: '.$result->get('lc').' - Links to internal: '.$result->get('lti').' - Links to external: '.$result->get('lte').'  - T2+D1+H1s1 Score: '.$result->get('rank')
 		.'</h4>'
-		.'<h3>description</h3>'.($record->value('description.content') == ''? 'null' : $record->value('description.content'))
+		.'<h3>description</h3>'.($result->get('description.content') == ''? 'null' : $result->get('description.content'))
 		.'<br>';
 		
 		
 		$groups=[];$subGroup=[];$properties=[];
-		if($record->value('itemlist') !== ''){
-			foreach($record->value('itemlist') as $key => $item){
+		if($result->get('itemlist') !== ''){
+			foreach($result->get('itemlist') as $key => $item){
 				if($key=='items'){					
 
 					foreach($item as $k => $itemID){
@@ -124,8 +125,10 @@ foreach ($results1 as $result1) {
 						
 						foreach( $itemID as $keys => $id){		
 							if($k == 'p'){
-								foreach( $id as $content => $attr){		
-									$properties[] = $attr;	
+								foreach( $id as $content => $attr){	
+							
+									$props[] = $attr;	
+									
 								}								
 							}
 						}						
@@ -133,6 +136,34 @@ foreach ($results1 as $result1) {
 				}			
 			}
 		}
+		
+		
+		
+			foreach( $props as $att){		
+				if(! IS_numeric( $att))	{
+					foreach( $att as $blah){						
+						if($blah != 'Property' && $blah != ''){								
+							$temp[] =$blah;				
+						}						
+					}	
+					if($temp[0] != ''){		
+						$properties[]=['property'=>$temp[0],'content'=>$temp[1]];
+					}			
+				}		
+			}
+		
+	/*	
+		echo '<pre>';
+		var_dump($properties);
+		echo '</pre>';
+*/		
+		
+		
+		
+		
+		
+	
+		
 		
 		$new =[];				
 		$subGroup = array_reverse($subGroup, true);		
@@ -149,6 +180,7 @@ foreach ($results1 as $result1) {
 				}
 			}
 		}				
+	
 		
 		//$new = array_reverse($new, true);			
 		
