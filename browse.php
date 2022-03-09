@@ -138,7 +138,7 @@ foreach ($results1 as $result1) {
 			}
 		}
 		
-		
+		/* added to restore $properties to prior outcome that was had with previous database adapter */
 		$properties=[];
 			foreach( $props as $att){		
 				if(! IS_numeric( $att))	{
@@ -156,18 +156,18 @@ foreach ($results1 as $result1) {
 				}		
 			}
 		
-
+	/*	
 		echo '<pre>';
 		var_dump($properties);
 		echo '</pre>';
-	/*	*/		
+		
 			echo '<pre>--';
 		var_dump($subGroup);
 		echo '</pre>';
 		
 		
 	echo '<hr>';
-		
+*/		
 	
 		
 		
