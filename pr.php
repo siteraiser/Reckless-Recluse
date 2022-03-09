@@ -14,7 +14,7 @@
     along with Reckless Recluse.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
+//require_once $_SERVER['DOCUMENT_ROOT'].'/'.'vendor/autoload.php';
 
 
 /* old
@@ -26,13 +26,16 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 
 */
 
-	$neo4j = ClientBuilder::create()
+	$neo4j = $Crawl->client;
+	
+/*use Laudis\Neo4j\Authentication\Authenticate;
+use Laudis\Neo4j\ClientBuilder;	ClientBuilder::create()
     ->withDriver('bolt', 'bolt://superuser:admin@localhost:7687') // creates a bolt driver
    //  ->withDriver('https', 'https://localhost:7474', Authenticate::basic('superuser', 'admin')) // creates an http driver
    // ->withDriver('neo4j', 'neo4j://neo4j.test.com?database=my-database', Authenticate::oidc('token')) // creates an auto routed driver with an OpenID Connect token
   ->withDefaultDriver('bolt')
     ->build();	  
-
+*/
 	//set nofollows on relationships
 	$query = "
 	MATCH (n:Url)<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->()-[:has_property]->(links) WHERE ((links.property = 'rel') AND (links.content = 'nofollow') )	
@@ -46,11 +49,11 @@ $neo4j = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@l
 	$query = "	
 	OPTIONAL MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[rs:references]->(:Url)
 	WHERE rs.rel is null or NOT rs.rel = 'nofollow'
-	WITH n,lto, (1 / toFloat(count(distinct rs))) * toFloat(count(distinct r)) AS pr
+		WITH n,lto, (1 / toFloat(count(distinct rs))) * toFloat(count(distinct r)) AS pr
 	WITH n, SUM(pr) AS r
 	SET n.pr = r
 	
-	return n";
+return n";
 	$result1 = $neo4j->run($query);
 	
 	/* If the site has main elements, you can base page rank on this instead or in addition (browse.php would likely need adjusting)
