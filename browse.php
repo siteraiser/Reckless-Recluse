@@ -105,7 +105,7 @@ foreach ($results1 as $result1) {
 		.'<br>';
 		
 		
-		$groups=[];$subGroup=[];$props=[];
+		$groups=[];$subGroup=[];$properties=[];
 		if($result->get('itemlist') !== ''){
 			foreach($result->get('itemlist') as $key => $item){
 				
@@ -122,11 +122,11 @@ foreach ($results1 as $result1) {
 							}
 							
 							if($k == 'p'){
-								foreach( $id as $content => $attr){	
-							
-									$props[] = $attr;	
-									
-								}								
+										
+								$properties[]=$id->getProperties(); 
+								/*foreach( $id as $content => $attr){								
+									$properties[] = $attr;										
+								}	*/				
 							}
 						}						
 					}			
@@ -134,36 +134,8 @@ foreach ($results1 as $result1) {
 			}
 		}
 		
-		/* added to filter the results into the desired properties for new Laudis neo4j adapter library */
-		$properties=[];
-			foreach( $props as $att){		
-				if(! IS_numeric( $att))	{
-					
-				$temp=[];
-					foreach( $att as $blah){						
-						if($blah != 'Property' && $blah != ''){								
-							$temp[] =$blah;//echo '<br>'.						
-						}						
-					}	
-					if(!empty($temp[0])){	//$temp[0] != ''	
-						$properties[]=['property'=>$temp[0],'content'=>$temp[1]];
-					}
-			
-				}		
-			}
-		
-	/*	
-		echo '<pre>';
-		var_dump($properties);
-		echo '</pre>';
-
-			echo '<pre>--';
-		var_dump($subGroup);
-		echo '</pre>';
-		
-		
-	echo '<hr>';
-	*/			
+	
+	
 	
 		
 		
