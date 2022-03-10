@@ -115,12 +115,10 @@ foreach ($results1 as $result1) {
 						foreach( $itemID as $keys => $id){		
 							if($k == 'groups'){					
 								$groups[]= $id;								
-							}
-					
+							}else 
 							if($k == 'items'){
 								$subGroup[$id][] =  $keys ;
-							}
-							
+							}else 
 							if($k == 'p'){
 								/* old way of getting properties
 								foreach( $id as $content => $attr){								
