@@ -166,7 +166,7 @@ foreach ($results1 as $result1) {
 	*/			
 	
 		
-		
+		/* Added to support Laudis nested results ... */
 		$new =[];				
 		$subGroup = array_reverse($subGroup, true);		
 		foreach($subGroup as $key=> $value){
@@ -182,7 +182,7 @@ foreach ($results1 as $result1) {
 				}
 			}
 		}				
-	
+	/* End of Laudis nested results filter to retrun properties to usable state ... */
 		
 		//$new = array_reverse($new, true);			
 		
