@@ -1,4 +1,4 @@
-<?php error_reporting(0);
+<?php //error_reporting(0);
 /*	Copyright © 2017 
 	
 	This file is part of Reckless Recluse.
@@ -83,8 +83,11 @@ foreach ($results1 as $result1) {
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(title) WHERE g.group = "title"
 	WITH DISTINCT n, rank, ln, lti, lte, lc, title
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(description) WHERE g.group = "description"
-	WITH  DISTINCT n, rank, ln, lti, lte, lc, title, description
+	WITH  DISTINCT n, rank, ln, lti, lte, lc, title, description 	
 	OPTIONAL MATCH (n)-[:has_group]->(g:Group)-[:has_item]->(i:Item)-[:has_property]->(p) WHERE NOT (g.group = "title" OR g.group ="description" OR g.group ="a")
+	
+	WITH  n,rank, ln, lti, lte, lc, title, description,i,g,p
+	ORDER BY toLower(g.group) ASC
 	WITH DISTINCT n,rank, ln, lti, lte, lc, title, description, Collect(i.itemID) AS items, Collect(g.group) AS groups, Collect(p) AS props
 		
 	RETURN n.href, n.pr, rank, ln, lti, lte, lc, title.content, description.content, Collect({items: items,groups: groups, p: props}) as itemlist
@@ -115,18 +118,18 @@ foreach ($results1 as $result1) {
 						foreach( $itemID as $keys => $id){		
 							if($k == 'groups'){					
 								$groups[]= $id;								
-							}
-					
+							}else					
 							if($k == 'items'){
 								$subGroup[$id][] =  $keys ;
-							}
-							
+							}else							
 							if($k == 'p'){
 										
 								$properties[]=$id->getProperties(); 
-								/*foreach( $id as $content => $attr){								
+								/* old way of getting properties
+								foreach( $id as $content => $attr){								
 									$properties[] = $attr;										
-								}	*/				
+								}
+								*/				
 							}
 						}						
 					}			
@@ -140,7 +143,7 @@ foreach ($results1 as $result1) {
 		
 		
 		$new =[];				
-		$subGroup = array_reverse($subGroup, true);		
+	//	$subGroup = array_reverse($subGroup, true);		
 		foreach($subGroup as $key=> $value){
 			foreach($value as $key2){
 				foreach($properties as $pkey => $property){
