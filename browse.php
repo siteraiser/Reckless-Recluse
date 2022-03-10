@@ -122,11 +122,13 @@ foreach ($results1 as $result1) {
 							}
 							
 							if($k == 'p'){
-								foreach( $id as $content => $attr){	
-							
-									$props[] = $attr;	
-									
-								}								
+								/* old way of getting properties
+								foreach( $id as $content => $attr){								
+									$properties[] = $attr;										
+								}
+								*/								
+								$properties[] = $id->getProperties();																
+								
 							}
 						}						
 					}			
@@ -134,37 +136,7 @@ foreach ($results1 as $result1) {
 			}
 		}
 		
-		/* Added to support Laudis nested results ... */
-		$properties=[];
-			foreach( $props as $att){		
-				if(! IS_numeric( $att))	{
-					
-				$temp=[];
-					foreach( $att as $blah){						
-						if($blah != 'Property' && $blah != ''){								
-							$temp[] =$blah;//echo '<br>'.						
-						}						
-					}	
-					if(!empty($temp[0])){	//$temp[0] != ''	
-						$properties[]=['property'=>$temp[0],'content'=>$temp[1]];
-					}
-			
-				}		
-			}
-		/* End of Laudis nested results filter to return $properties to a usable state ... */
-	/*	
-		echo '<pre>';
-		var_dump($properties);
-		echo '</pre>';
 
-			echo '<pre>--';
-		var_dump($subGroup);
-		echo '</pre>';
-		
-		
-	echo '<hr>';
-	*/			
-	
 		
 		
 		$new =[];				
