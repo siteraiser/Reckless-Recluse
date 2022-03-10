@@ -1,4 +1,4 @@
-<?php //error_reporting(0);
+<?php error_reporting(0);
 /*	Copyright © 2017 
 	//check line 680 (buf decode if there are encoding issues with links)
 	This file is part of Reckless Recluse.
@@ -240,7 +240,7 @@ function isFile($url){
 function addUrl($pageUrl,$url){
 	
 	
-	
+	//|| parse_url($url, PHP_URL_HOST) == 'localhost'
  if(stristr( $pageUrl,'#',0) || stristr( $url,'#',0)) {return;}
  
 	if(parse_url($pageUrl, PHP_URL_HOST) ==  parse_url($url, PHP_URL_HOST)){
@@ -260,6 +260,7 @@ function addUrl($pageUrl,$url){
 		 if(parse_url($url, PHP_URL_HOST) != parse_url($this->start_url, PHP_URL_HOST)){
 			 $type = 'external';
 		 }
+		 
 		 $query = 'CREATE (url:Url { href: $url, type:$type})';
 		 $this->client->run($query,["url"=>$url,"type"=>$type]);
 	}
@@ -808,7 +809,9 @@ $this->addUrlToTable('crawled',$pageUrl);
 					$this->start_url = 	$final_url;
 				
 					$this->base_url = parse_url($this->start_url, PHP_URL_SCHEME).'://'.parse_url($this->start_url, PHP_URL_HOST);//could be fucntion
-					$this->getAtts($buffer,$final_url);
+					if($this->urlNotFoundInGraph($final_url)){
+						$this->getAtts($buffer,$final_url);
+					}
 				}
 			}else if($httpCode == 404){
 				
