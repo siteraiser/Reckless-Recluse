@@ -151,7 +151,7 @@ foreach ($results1 as $result1) {
 			
 				}		
 			}
-		/* End of Laudis nested results filter to retrun $properties to a usable state ... */
+		/* End of Laudis nested results filter to return $properties to a usable state ... */
 	/*	
 		echo '<pre>';
 		var_dump($properties);
