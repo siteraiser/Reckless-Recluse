@@ -1033,7 +1033,7 @@ include($_SERVER['DOCUMENT_ROOT'].'/pr.php');
 ?> 
 </div>
 
-
+<a href="browse.php" target="_blank">Browse / Search</a>
 
 <style>
 div.tag {border: solid 1px #000;}
