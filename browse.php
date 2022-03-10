@@ -116,15 +116,11 @@ foreach ($results1 as $result1) {
 							if($k == 'groups'){					
 								$groups[]= $id;								
 							}
-						}						
-						
-						foreach( $itemID as $keys => $id){		
+					
 							if($k == 'items'){
 								$subGroup[$id][] =  $keys ;
 							}
-						}	
-						
-						foreach( $itemID as $keys => $id){		
+							
 							if($k == 'p'){
 								foreach( $id as $content => $attr){	
 							
@@ -138,7 +134,7 @@ foreach ($results1 as $result1) {
 			}
 		}
 		
-		/* added to restore $properties to prior outcome that was had with previous database adapter */
+		
 		$properties=[];
 			foreach( $props as $att){		
 				if(! IS_numeric( $att))	{
@@ -149,7 +145,7 @@ foreach ($results1 as $result1) {
 							$temp[] =$blah;//echo '<br>'.						
 						}						
 					}	
-					if($temp[0] != ''){		
+					if(!empty($temp[0])){	//$temp[0] != ''	
 						$properties[]=['property'=>$temp[0],'content'=>$temp[1]];
 					}
 			
@@ -160,14 +156,14 @@ foreach ($results1 as $result1) {
 		echo '<pre>';
 		var_dump($properties);
 		echo '</pre>';
-		
+
 			echo '<pre>--';
 		var_dump($subGroup);
 		echo '</pre>';
 		
 		
 	echo '<hr>';
-*/		
+	*/			
 	
 		
 		
