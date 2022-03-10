@@ -134,7 +134,7 @@ foreach ($results1 as $result1) {
 			}
 		}
 		
-		
+		/* added to filter the results into the desired properties for new Laudis neo4j adapter library */
 		$properties=[];
 			foreach( $props as $att){		
 				if(! IS_numeric( $att))	{
