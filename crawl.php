@@ -72,12 +72,21 @@ $data['h1s'] = ['body'=>['//h1'=>['text']]];
 $data['a'] = ['body'=>['.//a'=>['href']]];//['h2'=>['.//a'=>['href','title']]];//['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
 //$data['mobile'] = ['head'=>['//link[contains(attribute::rel, "alternate")]'=>['href']]];
 //$data['canonical'] = ['head'=>['//link[contains(attribute::rel, "canonical")]'=>['href']]];
+//$crawldata['a'] = ['body'=>['.//a'=>['href']]];
 //$data['headerlinks'] = ['header'=>['.//a'=>['href']]];
 //$data['navlinks'] = ['nav'=>['.//a'=>['href']]];//$data['navlinks'] = ['nav[0]'=>['.//a'=>['href']]]; // or maybe  nav[position()=5]
 $data['mainlinks'] = ['main'=>['.//a'=>['href','innertext','rel']]];
 //$data['asidelinks'] = ['aside'=>['.//a'=>['href','innertext']]];
 //$data['footerlinks'] = ['footer'=>['.//a'=>['href']]];
 $data['IFrames'] = ['body'=>['.//iframe'=>['src']]];
+//$data['name'] = ['address[contains(attribute::class, "fullAddress")]'=>['strong[@itemprop="name"]'=>['text']]];
+//$data['Address'] = ['address[contains(attribute::class, "fullAddress")]'=>['.//div[contains(attribute::class, "addressData")]'=>['text']]];
+
+	
+	
+	
+	
+	
 class StopWatch {
 //from github https://gist.github.com/phybros/5766062
   private static $startTimes = array();
