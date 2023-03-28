@@ -128,8 +128,9 @@ class crawlLinks {
    // ->withDriver('neo4j', 'neo4j://neo4j.test.com?database=my-database', Authenticate::oidc('token')) // creates an auto routed driver with an OpenID Connect token
   ->withDefaultDriver('bolt')
     ->build();	 
-		 
-		 
+	//Run here
+	$query = "CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;";
+	$result = $this->client->run($query,[]);
 		 
 		 
 		try {
@@ -144,7 +145,7 @@ class crawlLinks {
 	function inDB($table,$url){
 	//	echo"<span style='color:red;'>$url</span>";
 		$stmt =$this->pdo->prepare("SELECT * FROM $table WHERE url = ?");
-		$stmt->execute(array(utf8_decode(html_entity_decode($url))));
+		$stmt->execute(array(utf8_decode(html_entity_decode(urldecode($url))))); //use urldecode( ) to allow crawling of links with crufty spaces... needs more testing
 		$res = $stmt->fetch(PDO::FETCH_ASSOC);
 		
 		if(!empty($res)){
@@ -162,7 +163,7 @@ class crawlLinks {
 		(?)';	
 	
 		$stmt=$this->pdo->prepare($query);
-		$stmt->execute(array(utf8_decode(html_entity_decode($url))));//urldecode(urlencode(
+		$stmt->execute(array(utf8_decode(html_entity_decode(urldecode($url)))));//urldecode(urlencode(
 		
 		return $url;
 	}	
@@ -492,7 +493,26 @@ function getPagesWithExternal404s(){
 		echo '<br> URL is a redirect and : '.$result->get('n.href').' is on page '.$result->get('n2.href').'--'.$result->get('c');
 	}
 	
+}
+	
+function getDotHrefs($pageUrl,$url){
+	//determine ../ type of relative path
+	
+	while(strpos($url, '../') === 0 ){
+
+		$url = substr($url, 3);
+
+		$temp = explode('/',parse_url(rtrim($pageUrl,"/"), PHP_URL_PATH));
+
+		array_pop( $temp );
+
+		$pageUrl = implode('/',$temp);
+	}
+
+return ltrim($pageUrl.'/'.$url,"/"); 
 }	
+	
+	
 function innerHTML($element)
 {
     $doc = $element->ownerDocument;
@@ -607,6 +627,10 @@ function stripHTML($html){
 										}else{ // Does not start with /, # or ? 
 											if(parse_url($url, PHP_URL_SCHEME).	'://'.	parse_url($url, PHP_URL_HOST) == '://'){
 											//Doesn't have a host in href	
+												
+												if(strpos($url, '../') === 0 ){
+													$url = $this->getDotHrefs($pageUrl,$url);													
+												}
 												if($base_href != ''){
 													$final_value = $this->atts[$pageUrl][$group][$nodeID][$attribute]  = rtrim($base_href, '/'). '/'.$url; 
 												}else{
