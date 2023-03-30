@@ -478,7 +478,7 @@ function getPagesWithExternal404s(){
 	ORDER BY c DESC
 	LIMIT 50";
 	echo'<br>Pages containing 404s';
-	$result = $this->client->run($query);
+	$results = $this->client->run($query);
 	foreach ($results as $result) {
 		echo '<br> 404: '.$result->get('n.href').' is on page '.$result->get('n2.href').'--'.$result->get('c');
 	}
@@ -488,7 +488,7 @@ function getPagesWithExternal404s(){
 	ORDER BY c DESC
 	LIMIT 50";
 	echo'<br>Pages containing redirected urls';
-	$result = $this->client->run($query);
+	$results = $this->client->run($query);
 	foreach ($results as $result) {
 		echo '<br> URL is a redirect and : '.$result->get('n.href').' is on page '.$result->get('n2.href').'--'.$result->get('c');
 	}
