@@ -129,7 +129,7 @@ class crawlLinks {
   ->withDefaultDriver('bolt')
     ->build();	 
 	//Run here
-	$query = "CREATE CONSTRAINT ON (u:Url) ASSERT u.href IS UNIQUE;";
+	$query = "CREATE CONSTRAINT one_url_entry IF NOT EXISTS FOR (u:Url) REQUIRE u.href IS UNIQUE;";
 	$result = $this->client->run($query,[]);
 		 
 		 
