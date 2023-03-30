@@ -157,7 +157,7 @@ class crawlLinks {
 	
 	function addUrlToTable($table,$url){
 	
-		$query='INSERT INTO '.$table.' 
+		$query='INSERT IGNORE INTO '.$table.' 
 		(url)
 		VALUES
 		(?)';	
@@ -881,7 +881,7 @@ CREATE TABLE `crawl`.`crawled` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VA
 							
 							
 							
-					if( stristr( $href,'#',0) & (parse_url($href, PHP_URL_HOST) == parse_url($this->start_url, PHP_URL_HOST))){//host possibly not necessary
+					if( stristr( $href,'#',0) && (parse_url($href, PHP_URL_HOST) == parse_url($this->start_url, PHP_URL_HOST))){//host possibly not necessary
 						$urlparts = explode( $url , '#');
 						if(! $this->inDB('urls_captured',$urlparts[0])){   
 							$url = $urlparts[0] ;
