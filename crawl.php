@@ -436,7 +436,7 @@ foreach ($results as $result) {
 		RETURN n.href, c
 		ORDER BY c DESC
 		LIMIT 30";
-		$result = $this->client->run($query);
+		$results = $this->client->run($query);
 		$node_options = '';
 		foreach ($results as $result) {
 		echo '<br>'.$result->get('n.href').'--'.$result->get('c');
@@ -463,7 +463,7 @@ function getPagesWith404s(){
 	ORDER BY c DESC
 	LIMIT 50";
 	echo'<br>Pages containing 404s';
-	$result = $this->client->run($query);
+	$results = $this->client->run($query);
 	foreach ($results as $result) {
 		echo '<br> 404: '.$result->get('n.href').' is on page '.$result->get('n2.href').'--'.$result->get('c');
 	}
