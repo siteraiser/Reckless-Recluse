@@ -987,7 +987,7 @@ function download($urls){
 			
 			
 			
-			
+			//should be a function...
 		if($final_url != $pageUrl && $httpCode != 404) {
 				$this->redirectsTo[$pageUrl]= $final_url;
 				$this->redirected[] = $pageUrl;						
@@ -1081,7 +1081,7 @@ $this->addUrlToTable('crawled',$pageUrl);
 			
 		
 			
-			
+			//should be a function...
 			if($final_url != $pageUrl && $httpCode != 404) {
 				$this->redirectsTo[$pageUrl]= $final_url;
 				$this->redirected[] = $pageUrl;						
