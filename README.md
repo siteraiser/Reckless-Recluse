@@ -1,10 +1,10 @@
-# Reckless-Recluse-V1.1
-Updated for new Neo4J connector
+# Reckless-Recluse-V1.2
+Updated for new Laudis Neo4J connector
 
 A powerful php crawler designed to dig up site problems. 
 
 Requirements:
-mysql, neo4j 4+ and php7
+mysql, neo4j 4+ and php7,8
 
 You will have to create 3 mysql tables as shown below (recommended collation: utf8mb4_unicode_ci). 
 
