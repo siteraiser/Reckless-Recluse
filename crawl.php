@@ -1,4 +1,4 @@
-<?php error_reporting(0);
+<?php //error_reporting(0);
 /*	Copyright © 2017 
 	//check line 680 (buf decode if there are encoding issues with links)
 	This file is part of Reckless Recluse.
@@ -18,7 +18,10 @@
 <body>
 <form method="get">
 Url:<input placeholder="https://www.example.com/" type="text" style="width:250px;" name="name" value="<?php echo@$_GET['name']?>"><br>
-Levels:<input placeholder="limited to 3 in demo" type="text" name="levels" value="<?php echo@$_GET['levels']?>"><br>
+Levels:<input placeholder="Number" type="text" name="levels" value="<?php echo@$_GET['levels']?>"><br>
+Fast Mode (may lose ordering):<input type="checkbox" name="fast_mode" <?php echo (@$_GET['fast_mode']?'checked':'');?> value="1"><br>
+Max max_connections:<input placeholder="1 if not using fast mode" type="text" name="max_connections" value="<?php echo@$_GET['max_connections']?>"><br>
+
 Curl Timeout:<input placeholder="download timeout" type="text" name="download_timeout" value="<?php echo (@$_GET['download_timeout']?@$_GET['download_timeout']:5);?>"><br>
 Use Slash:<input type="checkbox" name="slash" <?php echo (@$_GET['slash']?'checked':'');?> value="1"><br>
 Check External:<input type="checkbox" name="external" <?php echo (@$_GET['external']?'checked':'');?> value="1"><br>
@@ -63,10 +66,19 @@ $crawl_level = 0;
 	$crawl_level = ($_GET['levels'] ? $_GET['levels'] : 0) ;
  }
  
+ 
+if(@$_GET['max_connections'] !='') {	
+	$max_connections = ($_GET['max_connections'] ? $_GET['max_connections'] : 1) ;
+}else{
+	$max_connections = 1;
+}
+ 
+ 
 //https://www.w3.org/TR/xpath/#path-abbrev https://www.w3.org/TR/xpath/#location-paths
 $data['title'] = ['head'=>['//title'=>['text']]];
 $data['description'] = ['head'=>['//meta[@name="description"]'=>['content']]];
 $data['keywords'] = ['head'=>['//meta[contains(attribute::name, "keywords")]'=>['content']]];
+$data['twitter:image'] = ['head'=>['//meta[contains(attribute::name, "twitter:image")]'=>['content']]];
 $data['h1s'] = ['body'=>['//h1'=>['text']]];
 //$data['script'] = ['query'=>['//script[contains(attribute::type, "application/ld+json")]'=>['innertext']]];
 $data['a'] = ['body'=>['.//a'=>['href']]];//['h2'=>['.//a'=>['href','title']]];//['main'=>['.//a'=>['href']],'nav'=>['.//a'=>['href']]]; 
@@ -108,11 +120,14 @@ class crawlLinks {
 	public $atts=[];  
 	public $capture = 'all';//all or null for default domain only, no 404s..
 	public $i=0;//levels 
+	public $progress=0;//urls left to download (multi curl mode)
+	public $fast_mode=false;
+	public $max_connections=1;	
 	public $four04s=[];
 	public $redirected=[];
 	public $redirectsTo=[];
 	public $otherErrors=[];
-	public $curl_timeout = 5000;//5 seconds default
+	public $curl_timeout = 5;//5 seconds default
 	public $include_dirs=[];//array('http://www.example.com/products-and-services/');//[]; 
 	public $exclude_dirs=array('https://www.siteraiser.com/book');// array('http://www.example.com/products-and-services/web-development');//[]; 
 	public $uagent ='Mozilla/5.0 (Linux; U; Android 2.2.1; en-us; MB525 Build/3.4.2-107_JDN-9) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1';
@@ -122,13 +137,14 @@ class crawlLinks {
 	/* old
 		$this->client = ClientBuilder::create()->addConnection('default', 'http://neo4j:admin@localhost:7474')->build(); // Example for HTTP connection configuration (port is optional)	
 	*/	 
-	$this->client = ClientBuilder::create()
-   ->withDriver('bolt', 'bolt://superuser:admin@localhost:7687') // creates a bolt driver
+$this->client = ClientBuilder::create()
+   ->withDriver('bolt', 'bolt://neo4j:admin@localhost:7687') // creates a bolt driver
    //  ->withDriver('https', 'https://localhost:7474', Authenticate::basic('superuser', 'admin')) // creates an http driver
    // ->withDriver('neo4j', 'neo4j://neo4j.test.com?database=my-database', Authenticate::oidc('token')) // creates an auto routed driver with an OpenID Connect token
   ->withDefaultDriver('bolt')
     ->build();	 
 	//Run here
+	
 	$query = "CREATE CONSTRAINT one_url_entry IF NOT EXISTS FOR (u:Url) REQUIRE u.href IS UNIQUE;";
 	$result = $this->client->run($query,[]);
 		 
@@ -239,6 +255,52 @@ function checkUrl($url)
 	return $msg;
 }
 
+
+
+
+//new, uses faster multi-curl requests to check external links
+function checkUrls($urls)
+{
+	$this->i=0;
+	$this->data=[];
+	$this->truncateTable('to_crawl');
+	$this->four04s =[];
+	$this->redirected=[];
+	$this->redirectsTo =[];
+	$this->progress=0;
+		
+    $this->makeRequests($urls);
+	$this->setPagesWith404s();
+	
+	
+	$out=[];
+	foreach($urls as $url){
+		$msg = (in_array($url,$this->four04s) ?'notfound':'found');
+		if(rtrim($url, '/') !== parse_url($url, PHP_URL_SCHEME).'://'.parse_url($url, PHP_URL_HOST) && ! stristr( $url,'#',0) ){
+			$msg.= (in_array($url,$this->redirected)  ?' redirected':'');
+		}
+		$out[$url]=$msg;
+	}
+	
+
+	return $out;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function isFile($url){
 	if(  stristr( strtolower( $url),'.pdf')===false && stristr( strtolower( $url),'.jpg')===false && stristr( strtolower( $url),'.png')===false){	
 		return false;
@@ -246,6 +308,9 @@ function isFile($url){
 		return true;
 	}
 }
+
+
+
 
 function addUrl($pageUrl,$url){
 	
@@ -747,6 +812,316 @@ function encodeURI($url) {
     );
     return strtr(rawurlencode($url), array_merge($reserved,$unescaped,$score));
 }
+
+
+
+
+
+//function for curl multi handle from Timo Huovinen here... https://www.php.net/manual/en/function.curl-multi-exec.php#124240 
+//probably more complicated than it needs to be but seems to work
+	function curl_multi_exec_full($mh, &$still_running) {
+		do {
+			$state = curl_multi_exec($mh, $still_running);
+		} while ($still_running > 0 && $state === CURLM_CALL_MULTI_PERFORM && curl_multi_select($mh, 0.1));
+		return $state;
+	}
+	
+	function curl_multi_wait($mh, $minTime = 0.001, $maxTime = 1){
+		$umin = $minTime*1000000;
+
+		$start_time = microtime(true);
+		$num_descriptors = curl_multi_select($mh, $maxTime);
+		if($num_descriptors === -1){
+			usleep($umin);
+		}
+
+		$timespan = (microtime(true) - $start_time);
+		if($timespan < $umin){
+			usleep($umin - $timespan);
+		}
+	}
+
+
+
+//replacement to add a new handle to multi curl 
+function addDownload($pageUrl,$mh,$chandles,$url_resource_ids){
+
+		$httpCode ='';
+		$buf = '';
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_USERAGENT, $this->uagent);
+		curl_setopt($ch,CURLOPT_SSLVERSION, 6);
+		curl_setopt($ch, CURLOPT_URL,$this->encodeURI($pageUrl));
+		curl_setopt($ch, CURLOPT_COOKIEFILE, "");
+		if( stristr( strtolower( $pageUrl),'.pdf',0) && stristr( strtolower( $pageUrl),'.jpg',0) && stristr( strtolower( $pageUrl),'.png',0)){	
+		    curl_setopt($ch, CURLOPT_HEADER,         true);
+			curl_setopt($ch, CURLOPT_NOBODY,         true); 					
+		}
+				
+		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+		curl_setopt($ch, CURLOPT_TIMEOUT,$this->curl_timeout);
+		
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+		//curl_setopt_array($ch, $opts);
+		curl_multi_add_handle($mh, $ch);
+		$chandles[] = $ch;
+		$url_resource_ids[(int) $ch] = $pageUrl;
+		return [$chandles,$url_resource_ids];
+}
+
+
+function download($urls){
+
+	$mh = curl_multi_init();
+	
+	$url_resource_ids=[];
+	$chandles = [];
+	//Start with however many downloads (under max-max_connections)
+	$i = 0;
+	foreach($urls as $key => $pageUrl) {
+		if($i++ <= $this->max_connections){
+			
+			$pageUrl = $this->addSlash($pageUrl);
+			
+			$download_atts = $this->addDownload($pageUrl,$mh,$chandles,$url_resource_ids);			
+			$chandles = $download_atts[0];
+			$url_resource_ids = $download_atts[1];
+			unset($urls[$key]);
+		}
+	}
+	$urls = array_values($urls);
+
+
+	$prevRunning = null;
+
+//Begin output
+		
+
+	do {
+		$status = $this->curl_multi_exec_full($mh, $running);
+		if($running < $prevRunning){
+			while ($read = curl_multi_info_read($mh, $msgs_in_queue)) {
+
+
+				$info = curl_getinfo($read['handle']);
+
+
+				if($read['result'] !== CURLE_OK){
+					$this->progress-- ;
+					//error (bad url)
+					ob_end_flush();
+					ob_start();
+					ob_implicit_flush();		
+					echo '<br><span style="color:red">Error 0 -'.urldecode($info['url']).'</span>';
+					
+					ob_flush();
+					flush();
+		
+					
+				}
+
+				if($read['result'] === CURLE_OK){
+					
+					if(isset($info['redirect_url']) && trim($info['redirect_url'])!==''){
+
+					/*	print "running redirect: ".$info['redirect_url'].PHP_EOL;
+						$ch3 = curl_init();
+						curl_setopt($ch3, CURLOPT_URL, $info['redirect_url']);
+						curl_setopt($ch3, CURLOPT_HEADER, 0);
+						curl_setopt($ch3, CURLOPT_RETURNTRANSFER, 1);
+						curl_setopt($ch3, CURLOPT_FOLLOWLOCATION, 0);
+						curl_multi_add_handle($mh,$ch3);	*/
+					}
+									
+					
+					//Set page URL, buffer and http code, and check if "effective url" is different to determine if there was a a redirect.
+					$pageUrl = $this->addSlash($url_resource_ids[(int) $read['handle']]);		
+					$httpCode = $info['http_code'];	
+					
+					$type = '';
+					if($pageUrl != $this->addSlash(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL)) &&  $httpCode != 0){		
+					$type = '1';
+					
+						if($pageUrl == $this->addSlash(urldecode(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL))) || $pageUrl == $this->addSlash(urldecode(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL))).'?'){
+							$final_url = $this->addSlash($url_resource_ids[(int) $read['handle']]);
+						}else{
+							$final_url = $this->addSlash(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL));
+						}
+						
+						$buffer = curl_multi_getcontent($read['handle']);
+						
+					}else if($httpCode == 200 || $httpCode > 400 ){				
+						$type = '2';			
+						$final_url = $this->addSlash($url_resource_ids[(int) $read['handle']]);
+								
+						$buffer = curl_multi_getcontent($read['handle']);
+					
+					}else{	//none found so far, maybe remove lol
+							$type = '3';
+						$final_url = $this->addSlash($url_resource_ids[(int) $read['handle']]);
+						$httpCode = $info['http_code'];			
+						$buffer = curl_multi_getcontent($read['handle']);
+					}
+					
+					
+					$this->addUrlToTable('crawled',$pageUrl);
+	
+					
+					$this->progress--;
+					//Update progress
+					ob_end_flush();
+					ob_start();
+					ob_implicit_flush();		
+					echo '<br><span class="success">'.urldecode($final_url).'</span>';//	.'-'.$httpCode.'='.$pageUrl.'='
+					/*echo'<pre>';
+					var_dump($info);
+					echo'</pre>';
+					*/
+					ob_flush();
+					flush();
+			
+					
+			
+			
+			
+			
+		if($final_url != $pageUrl && $httpCode != 404) {
+				$this->redirectsTo[$pageUrl]= $final_url;
+				$this->redirected[] = $pageUrl;						
+							
+				if( $this->isSameDomain($pageUrl,$final_url)){
+					//$this->urlsCrawled[]=$final_url;	
+					$this->addUrlToTable('crawled',$final_url);
+					
+					$this->start_url = 	$final_url;
+				
+					$this->base_url = parse_url($this->start_url, PHP_URL_SCHEME).'://'.parse_url($this->start_url, PHP_URL_HOST);//could be fucntion
+					$this->getAtts($buffer,$final_url);
+				}
+			}else if($httpCode == 404){
+				
+				if($final_url != $pageUrl){
+					$this->four04s[] = $final_url;
+					$this->redirectsTo[$pageUrl]= $final_url;
+					$this->redirected[] = $pageUrl;		
+				}else{
+					$this->four04s[] = $pageUrl;
+				}
+			}else if($buffer ==""){
+				$this->otherErrors[$pageUrl] = $httpCode;//
+			}else{
+				$this->getAtts($buffer,$pageUrl);    
+			}	
+			
+	
+					//echo curl_multi_getcontent($read['handle']));
+				}
+		
+				//A download finished add more
+				while( $this->progress - count($urls) <= $this->max_connections && !empty($urls) ){
+
+					$url = $urls[0];
+					unset($urls[0]);
+					$urls = array_values($urls);			
+					$download_atts = $this->addDownload($url,$mh,$chandles,$url_resource_ids);			
+					$chandles = $download_atts[0];
+					$url_resource_ids = $download_atts[1];
+				}
+						
+				
+			}
+		}
+
+		if ($running > 0 ) {
+			$this->curl_multi_wait($mh);
+		}
+
+		$prevRunning = $running;
+
+	} while ($running > 0 && $status == CURLM_OK);
+
+	foreach($chandles as $ch){
+		curl_multi_remove_handle($mh, $ch);
+	}
+	
+	
+
+	curl_multi_close($mh);	
+
+
+}	
+
+
+
+function downloadOneAtATime($urls){
+        foreach ($urls as $pageUrl) {   
+		
+			$pageUrl = $this->addSlash($pageUrl);
+		
+			ob_end_flush();
+			ob_start();
+			ob_implicit_flush();		
+			echo '<span style="color:green;">'.$pageUrl .'</span><br>';	
+			ob_flush();
+			flush();
+			
+	
+$this->addUrlToTable('crawled',$pageUrl);
+		
+		
+		
+			$page = $this->sendRequest($pageUrl);		
+			$final_url = $page['final_url'];
+			$final_url = $this->addSlash($final_url);
+			$httpCode = $page['http_code'];			
+			$buffer = $page['buffer'];
+			
+		
+			
+			
+			if($final_url != $pageUrl && $httpCode != 404) {
+				$this->redirectsTo[$pageUrl]= $final_url;
+				$this->redirected[] = $pageUrl;						
+							
+				if( $this->isSameDomain($pageUrl,$final_url)){
+					//$this->urlsCrawled[]=$final_url;	
+					$this->addUrlToTable('crawled',$final_url);
+					
+					$this->start_url = 	$final_url;
+				
+					$this->base_url = parse_url($this->start_url, PHP_URL_SCHEME).'://'.parse_url($this->start_url, PHP_URL_HOST);//could be fucntion
+					if($this->urlNotFoundInGraph($final_url)){
+						$this->getAtts($buffer,$final_url);
+					}
+				}
+			}else if($httpCode == 404){
+				
+				if($final_url != $pageUrl){
+					$this->four04s[] = $final_url;
+					$this->redirectsTo[$pageUrl]= $final_url;
+					$this->redirected[] = $pageUrl;		
+				}else{
+					$this->four04s[] = $pageUrl;
+				}
+			}else if($buffer ==""){
+				$this->otherErrors[$pageUrl] = $httpCode;//
+			}else{
+				$this->getAtts($buffer,$pageUrl);    
+			}
+        }
+
+}
+
+
+
+
+
+
+
+//For one request at a time. Slower but in order.
 	public function sendRequest($pageUrl){	
 			
 		$httpCode ='';
@@ -803,64 +1178,14 @@ function encodeURI($url) {
 			$first_run=1;
 		}
 	
+	if($this->fast_mode){	
+		$this->progress = count($urls);
+		$this->download($urls);
+	}else{
 		
-	
-	
-        foreach ($urls as $pageUrl) {   
-		
-			$pageUrl = $this->addSlash($pageUrl);
-		
-			ob_end_flush();
-			ob_start();
-			ob_implicit_flush();		
-			echo '<span style="color:green;">'.$pageUrl .'</span><br>';	
-			ob_flush();
-			flush();
-			
-	
-$this->addUrlToTable('crawled',$pageUrl);
-		
-		
-		
-			$page = $this->sendRequest($pageUrl);		
-			$final_url = $page['final_url'];
-			$final_url = $this->addSlash($final_url);
-			$httpCode = $page['http_code'];			
-			$buffer = $page['buffer'];
-			
-		
-			
-			
-			if($final_url != $pageUrl && $httpCode != 404) {
-				$this->redirectsTo[$pageUrl]= $final_url;
-				$this->redirected[] = $pageUrl;						
-							
-				if( $this->isSameDomain($pageUrl,$final_url)){
-					//$this->urlsCrawled[]=$final_url;	
-					$this->addUrlToTable('crawled',$final_url);
-					
-					$this->start_url = 	$final_url;
-				
-					$this->base_url = parse_url($this->start_url, PHP_URL_SCHEME).'://'.parse_url($this->start_url, PHP_URL_HOST);//could be fucntion
-					if($this->urlNotFoundInGraph($final_url)){
-						$this->getAtts($buffer,$final_url);
-					}
-				}
-			}else if($httpCode == 404){
-				
-				if($final_url != $pageUrl){
-					$this->four04s[] = $final_url;
-					$this->redirectsTo[$pageUrl]= $final_url;
-					$this->redirected[] = $pageUrl;		
-				}else{
-					$this->four04s[] = $pageUrl;
-				}
-			}else if($buffer ==""){
-				$this->otherErrors[$pageUrl] = $httpCode;//
-			}else{
-				$this->getAtts($buffer,$pageUrl);    
-			}
-        }
+		$this->downloadOneAtATime($urls);
+	}
+
 /*
 CREATE TABLE `crawl`.`urls_captured` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
 CREATE TABLE `crawl`.`to_crawl` ( `id` INT(10) NOT NULL AUTO_INCREMENT , `url` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`), UNIQUE (`url`)) ENGINE = InnoDB;
@@ -935,9 +1260,14 @@ $Crawl = new crawlLinks();
  
 $Crawl->clear(); //clear graph & mySql
 echo '<h3>Level: '.$Crawl->i=$crawl_level.'</h3>';
+
 $Crawl->curl_timeout = $curl_timeout;
 $Crawl->data = $data;
 $Crawl->slash_only = (@$_GET['slash']?true:false);
+
+$Crawl->fast_mode = (@$_GET['fast_mode']?true:false);
+$Crawl->max_connections = $max_connections;
+
 $Crawl->makeRequests($reqs);
 echo sprintf("Execution time: %s seconds - (Max $maxextime)", StopWatch::elapsed());
 $Crawl->getPagesWith404s();
@@ -1029,14 +1359,15 @@ foreach($Crawl->otherErrors as $err_code => $url){
 ?>
 </div>
 
-<h2 id="external">external</h2><div>
+<h2 id="external">external</h2>
+<div class="external">
 <?php
 if(@$_GET['external']){
 	$host = parse_url($Crawl->start_url, PHP_URL_HOST);
 	foreach($Crawl->GetUrls('urls_captured') as $url){	
 		if($host != parse_url($url, PHP_URL_HOST)){
 			
-			StopWatch::start();
+			//StopWatch::start();
 			
 			
 			if(stristr( $url,'#',0)){
@@ -1047,17 +1378,45 @@ if(@$_GET['external']){
 			$url = $Crawl->addSlash($url);
 			
 			if($url !=''){
-				echo  '<div><a href="'.$url.'">'.$url.'</a> '. $Crawl->checkUrl([$url]).'</div>';		 
-			
-				echo '<pre>';
-				echo htmlspecialchars(print_r($Crawl->redirectsTo, true));
-				echo '</pre>';	
+				
+				if($Crawl->fast_mode){
+					$ext_urls[]=$url;
+				}else{
+				
+				
+					echo  '<div><a href="'.$url.'>'.$url.'"</a> '. $Crawl->checkUrl([$url]).'</div>';		 
+				
+					echo '<pre>';
+					echo htmlspecialchars(print_r($Crawl->redirectsTo, true));
+					echo '</pre>';	
+				
+				}
+				
 			}
 			
 			
-			echo sprintf("Execution time: %s seconds - (Max $maxextime)", StopWatch::elapsed());
+			//echo sprintf("Execution time: %s seconds - (Max $maxextime)", StopWatch::elapsed());
 		}
 	}
+	
+	
+	//Output fast mode values
+	if($Crawl->fast_mode){
+		$url_info_array = $Crawl->checkUrls($ext_urls);
+		
+		
+		foreach($url_info_array as $url => $msg){
+			echo  '<div style="border:solid 1px black"><a href="',$url,'">',urldecode($url),'</a> ',$msg;
+			if(in_array($url,array_keys($Crawl->redirectsTo))){
+				echo' -> ','<a href="',$Crawl->redirectsTo[$url],'">',urldecode($Crawl->redirectsTo[$url]),'</a>';
+			
+			}
+			echo  '</div>';	
+		}
+	}
+	
+	
+	
 	$Crawl->getPagesWithExternal404s();
 	
 }
@@ -1071,6 +1430,8 @@ include($_SERVER['DOCUMENT_ROOT'].'/pr.php');
 <style>
 div.tag {border: solid 1px #000;}
 div.tag > div {border: solid 1px #777;}
+
+div.external div{border: solid 1px #000;}
 </style>
 </body>
 </html>
