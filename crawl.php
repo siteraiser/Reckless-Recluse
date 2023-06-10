@@ -796,36 +796,34 @@ function stripHTML($html){
 			}
 			
 	}
-function encodeURI($url) {
-    // http://php.net/manual/en/function.rawurlencode.php
-    // https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/encodeURI
-    $unescaped = array(
-        '%2D'=>'-','%5F'=>'_','%2E'=>'.','%21'=>'!', '%7E'=>'~',
-        '%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'
-    );
-    $reserved = array(
-        '%3B'=>';','%2C'=>',','%2F'=>'/','%3F'=>'?','%3A'=>':',
-        '%40'=>'@','%26'=>'&','%3D'=>'=','%2B'=>'+','%24'=>'$'
-    );
-    $score = array(
-        '%23'=>'#'
-    );
-    return strtr(rawurlencode($url), array_merge($reserved,$unescaped,$score));
-}
+	
+	function encodeURI($url) {
+		// http://php.net/manual/en/function.rawurlencode.php
+		// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/encodeURI
+		$unescaped = array(
+			'%2D'=>'-','%5F'=>'_','%2E'=>'.','%21'=>'!', '%7E'=>'~',
+			'%2A'=>'*', '%27'=>"'", '%28'=>'(', '%29'=>')'
+		);
+		$reserved = array(
+			'%3B'=>';','%2C'=>',','%2F'=>'/','%3F'=>'?','%3A'=>':',
+			'%40'=>'@','%26'=>'&','%3D'=>'=','%2B'=>'+','%24'=>'$'
+		);
+		$score = array(
+			'%23'=>'#'
+		);
+		return strtr(rawurlencode($url), array_merge($reserved,$unescaped,$score));
+	}
 
 
-
-
-
-//2 functions for curl multi handle from Timo Huovinen here... https://www.php.net/manual/en/function.curl-multi-exec.php#124240 
-//probably more complicated than it needs to be but seems to work
+	//2 functions for curl multi handle from Timo Huovinen here... https://www.php.net/manual/en/function.curl-multi-exec.php#124240 
+	//probably more complicated than it needs to be but seems to work
 	function curl_multi_exec_full($mh, &$still_running) {
 		do {
 			$state = curl_multi_exec($mh, $still_running);
 		} while ($still_running > 0 && $state === CURLM_CALL_MULTI_PERFORM && curl_multi_select($mh, 0.1));
 		return $state;
 	}
-	
+		
 	function curl_multi_wait($mh, $minTime = 0.001, $maxTime = 1){
 		$umin = $minTime*1000000;
 
@@ -843,8 +841,8 @@ function encodeURI($url) {
 
 
 
-//replacement to add a new handle to multi curl 
-function addDownload($pageUrl,$mh,$chandles,$url_resource_ids){
+	//replacement to add a new handle to multi curl 
+	function addDownload($pageUrl,$mh,$chandles,$url_resource_ids){
 
 		$httpCode ='';
 		$buf = '';
@@ -854,7 +852,7 @@ function addDownload($pageUrl,$mh,$chandles,$url_resource_ids){
 		curl_setopt($ch, CURLOPT_URL,$this->encodeURI($pageUrl));
 		curl_setopt($ch, CURLOPT_COOKIEFILE, "");
 		if( stristr( strtolower( $pageUrl),'.pdf',0) && stristr( strtolower( $pageUrl),'.jpg',0) && stristr( strtolower( $pageUrl),'.png',0)){	
-		    curl_setopt($ch, CURLOPT_HEADER,         true);
+			curl_setopt($ch, CURLOPT_HEADER,         true);
 			curl_setopt($ch, CURLOPT_NOBODY,         true); 					
 		}
 				
@@ -870,234 +868,215 @@ function addDownload($pageUrl,$mh,$chandles,$url_resource_ids){
 		$chandles[] = $ch;
 		$url_resource_ids[(int) $ch] = $pageUrl;
 		return [$chandles,$url_resource_ids];
-}
-
-
-function download($urls){
-
-	$mh = curl_multi_init();
-	
-	$url_resource_ids=[];
-	$chandles = [];
-	//Start with however many downloads (under max-max_connections)
-	$i = 0;
-	foreach($urls as $key => $pageUrl) {
-		if($i++ <= $this->max_connections){
-			
-			$pageUrl = $this->addSlash($pageUrl);
-			
-			$download_atts = $this->addDownload($pageUrl,$mh,$chandles,$url_resource_ids);			
-			$chandles = $download_atts[0];
-			$url_resource_ids = $download_atts[1];
-			unset($urls[$key]);
-		}
 	}
-	$urls = array_values($urls);
 
 
-	$prevRunning = null;
+	function download($urls){
 
-//Begin output
+		$mh = curl_multi_init();
 		
+		$url_resource_ids=[];
+		$chandles = [];
+		//Start with however many downloads (under max-max_connections)
+		$i = 0;
+		foreach($urls as $key => $pageUrl) {
+			if($i++ <= $this->max_connections){
+				
+				$pageUrl = $this->addSlash($pageUrl);
+				
+				$download_atts = $this->addDownload($pageUrl,$mh,$chandles,$url_resource_ids);			
+				$chandles = $download_atts[0];
+				$url_resource_ids = $download_atts[1];
+				unset($urls[$key]);
+			}
+		}
+		$urls = array_values($urls);
 
-	do {
-		$status = $this->curl_multi_exec_full($mh, $running);
-		if($running < $prevRunning){
-			while ($read = curl_multi_info_read($mh, $msgs_in_queue)) {
+		$prevRunning = null;
+
+		//Continue downloading...
+
+		do {
+			$status = $this->curl_multi_exec_full($mh, $running);
+			if($running < $prevRunning){
+				while ($read = curl_multi_info_read($mh, $msgs_in_queue)) {
 
 
-				$info = curl_getinfo($read['handle']);
+					$info = curl_getinfo($read['handle']);
 
 
-				if($read['result'] !== CURLE_OK){
-					$this->progress-- ;
-					//error (bad url)
-					ob_end_flush();
-					ob_start();
-					ob_implicit_flush();		
-					echo '<br><span style="color:red">Error 0 -'.urldecode($info['url']).'</span>';
-					
-					ob_flush();
-					flush();
-		
-					
-				}
-
-				if($read['result'] === CURLE_OK){
-					
-					if(isset($info['redirect_url']) && trim($info['redirect_url'])!==''){
-
-					/*	print "running redirect: ".$info['redirect_url'].PHP_EOL;
-						$ch3 = curl_init();
-						curl_setopt($ch3, CURLOPT_URL, $info['redirect_url']);
-						curl_setopt($ch3, CURLOPT_HEADER, 0);
-						curl_setopt($ch3, CURLOPT_RETURNTRANSFER, 1);
-						curl_setopt($ch3, CURLOPT_FOLLOWLOCATION, 0);
-						curl_multi_add_handle($mh,$ch3);	*/
+					if($read['result'] !== CURLE_OK){
+						$this->progress-- ;
+						//error (bad url)
+						ob_end_flush();
+						ob_start();
+						ob_implicit_flush();		
+						echo '<br><span style="color:red">Error 0 -'.urldecode($info['url']).'</span>';
+						
+						ob_flush();
+						flush();
+			
+						
 					}
-									
-					
-					//Set page URL, buffer and http code, and check if "effective url" is different to determine if there was a a redirect.
-					$pageUrl = $this->addSlash($url_resource_ids[(int) $read['handle']]);		
-					$httpCode = $info['http_code'];	
-					
-					$type = '';
-					if($pageUrl != $this->addSlash(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL)) &&  $httpCode != 0){		
-					$type = '1';
-					
-						if($pageUrl == $this->addSlash(urldecode(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL))) || $pageUrl == $this->addSlash(urldecode(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL))).'?'){
+
+					if($read['result'] === CURLE_OK){
+						
+						if(isset($info['redirect_url']) && trim($info['redirect_url'])!==''){
+
+						/*	print "running redirect: ".$info['redirect_url'].PHP_EOL;
+							$ch3 = curl_init();
+							curl_setopt($ch3, CURLOPT_URL, $info['redirect_url']);
+							curl_setopt($ch3, CURLOPT_HEADER, 0);
+							curl_setopt($ch3, CURLOPT_RETURNTRANSFER, 1);
+							curl_setopt($ch3, CURLOPT_FOLLOWLOCATION, 0);
+							curl_multi_add_handle($mh,$ch3);	*/
+						}
+										
+						
+						//Set page URL, buffer and http code, and check if "effective url" is different to determine if there was a a redirect.
+						$pageUrl = $this->addSlash($url_resource_ids[(int) $read['handle']]);		
+						$httpCode = $info['http_code'];	
+						
+						$type = '';
+						if($pageUrl != $this->addSlash(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL)) &&  $httpCode != 0){		
+						$type = '1';
+						
+							if($pageUrl == $this->addSlash(urldecode(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL))) || $pageUrl == $this->addSlash(urldecode(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL))).'?'){
+								$final_url = $this->addSlash($url_resource_ids[(int) $read['handle']]);
+							}else{
+								$final_url = $this->addSlash(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL));
+							}
+							
+							$buffer = curl_multi_getcontent($read['handle']);
+							
+						}else if($httpCode == 200 || $httpCode > 400 ){				
+							$type = '2';			
 							$final_url = $this->addSlash($url_resource_ids[(int) $read['handle']]);
-						}else{
-							$final_url = $this->addSlash(curl_getinfo($read['handle'],CURLINFO_EFFECTIVE_URL));
+									
+							$buffer = curl_multi_getcontent($read['handle']);
+						
+						}else{	//none found so far, maybe remove lol
+								$type = '3';
+							$final_url = $this->addSlash($url_resource_ids[(int) $read['handle']]);
+							$httpCode = $info['http_code'];			
+							$buffer = curl_multi_getcontent($read['handle']);
 						}
 						
-						$buffer = curl_multi_getcontent($read['handle']);
 						
-					}else if($httpCode == 200 || $httpCode > 400 ){				
-						$type = '2';			
-						$final_url = $this->addSlash($url_resource_ids[(int) $read['handle']]);
-								
-						$buffer = curl_multi_getcontent($read['handle']);
-					
-					}else{	//none found so far, maybe remove lol
-							$type = '3';
-						$final_url = $this->addSlash($url_resource_ids[(int) $read['handle']]);
-						$httpCode = $info['http_code'];			
-						$buffer = curl_multi_getcontent($read['handle']);
-					}
-					
-					
-					$this->addUrlToTable('crawled',$pageUrl);
-	
-					
-					$this->progress--;
-					//Update progress
-					ob_end_flush();
-					ob_start();
-					ob_implicit_flush();		
-					echo '<br><span class="success">'.urldecode($final_url).'</span>';//	.'-'.$httpCode.'='.$pageUrl.'='
-					/*echo'<pre>';
-					var_dump($info);
-					echo'</pre>';
-					*/
-					ob_flush();
-					flush();
-			
-					
-			
-			
-			
-					//Fill not found, redirect arrays, get and add attributes etc.
-					$this->sortAndSubmit($pageUrl,$final_url,$httpCode,$buffer);
-			
-	
-					//echo curl_multi_getcontent($read['handle']));
-				}
+						$this->addUrlToTable('crawled',$pageUrl);
 		
-				//A download finished add more
-				while( $this->progress - count($urls) <= $this->max_connections && !empty($urls) ){
-
-					$url = $urls[0];
-					unset($urls[0]);
-					$urls = array_values($urls);			
-					$download_atts = $this->addDownload($url,$mh,$chandles,$url_resource_ids);			
-					$chandles = $download_atts[0];
-					$url_resource_ids = $download_atts[1];
-				}
+						
+						$this->progress--;
+						//Update progress
+						ob_end_flush();
+						ob_start();
+						ob_implicit_flush();		
+						echo '<br><span class="success">'.urldecode($final_url).'</span>';//	.'-'.$httpCode.'='.$pageUrl.'='
+						/*echo'<pre>';
+						var_dump($info);
+						echo'</pre>';
+						*/
+						ob_flush();
+						flush();
+				
 						
 				
-			}
-		}
+						//Fill not found, redirect arrays, get and add attributes etc.
+						$this->sortAndSubmit($pageUrl,$final_url,$httpCode,$buffer);
 
-		if ($running > 0 ) {
-			$this->curl_multi_wait($mh);
-		}
-
-		$prevRunning = $running;
-
-	} while ($running > 0 && $status == CURLM_OK);
-
-	foreach($chandles as $ch){
-		curl_multi_remove_handle($mh, $ch);
-	}
-	
-	
-
-	curl_multi_close($mh);	
-
-
-}	
-
-function sortAndSubmit($pageUrl,$final_url,$httpCode,$buffer){
-			if($final_url != $pageUrl && $httpCode != 404) {
-				$this->redirectsTo[$pageUrl]= $final_url;
-				$this->redirected[] = $pageUrl;						
-							
-				if( $this->isSameDomain($pageUrl,$final_url)){
-					//$this->urlsCrawled[]=$final_url;	
-					$this->addUrlToTable('crawled',$final_url);
-					
-					$this->start_url = 	$final_url;
-				
-					$this->base_url = parse_url($this->start_url, PHP_URL_SCHEME).'://'.parse_url($this->start_url, PHP_URL_HOST);//could be fucntion
-					if($this->urlNotFoundInGraph($final_url)){
-						$this->getAtts($buffer,$final_url);
 					}
+			
+					//A download finished add more
+					while( $this->progress - count($urls) <= $this->max_connections && !empty($urls) ){
+
+						$url = $urls[0];
+						unset($urls[0]);
+						$urls = array_values($urls);			
+						$download_atts = $this->addDownload($url,$mh,$chandles,$url_resource_ids);			
+						$chandles = $download_atts[0];
+						$url_resource_ids = $download_atts[1];
+					}
+					
 				}
-			}else if($httpCode == 404){
-				
-				if($final_url != $pageUrl){
-					$this->four04s[] = $final_url;
-					$this->redirectsTo[$pageUrl]= $final_url;
-					$this->redirected[] = $pageUrl;		
-				}else{
-					$this->four04s[] = $pageUrl;
-				}
-			}else if($buffer ==""){
-				$this->otherErrors[$pageUrl] = $httpCode;//
-			}else{
-				$this->getAtts($buffer,$pageUrl);    
 			}
 
-}
+			if ($running > 0 ) {
+				$this->curl_multi_wait($mh);
+			}
+
+			$prevRunning = $running;
+
+		} while ($running > 0 && $status == CURLM_OK);
+
+		foreach($chandles as $ch){
+			curl_multi_remove_handle($mh, $ch);
+		}
+	
+		curl_multi_close($mh);	
+
+
+	}	
+
+	function sortAndSubmit($pageUrl,$final_url,$httpCode,$buffer){
+		if($final_url != $pageUrl && $httpCode != 404) {
+			$this->redirectsTo[$pageUrl]= $final_url;
+			$this->redirected[] = $pageUrl;						
+
+			if( $this->isSameDomain($pageUrl,$final_url)){
+				//$this->urlsCrawled[]=$final_url;	
+				$this->addUrlToTable('crawled',$final_url);
+				
+				$this->start_url = 	$final_url;
+			
+				$this->base_url = parse_url($this->start_url, PHP_URL_SCHEME).'://'.parse_url($this->start_url, PHP_URL_HOST);//could be fucntion
+				if($this->urlNotFoundInGraph($final_url)){
+					$this->getAtts($buffer,$final_url);
+				}
+			}
+		}else if($httpCode == 404){
+					
+			if($final_url != $pageUrl){
+				$this->four04s[] = $final_url;
+				$this->redirectsTo[$pageUrl]= $final_url;
+				$this->redirected[] = $pageUrl;		
+			}else{
+				$this->four04s[] = $pageUrl;
+			}
+		}else if($buffer ==""){
+			$this->otherErrors[$pageUrl] = $httpCode;//
+		}else{
+			$this->getAtts($buffer,$pageUrl);    
+		}
+
+	}
 
 
 
-
-
-function downloadOneAtATime($urls){
-        foreach ($urls as $pageUrl) {   
+	function downloadOneAtATime($urls){
+		foreach ($urls as $pageUrl) {   
 		
 			$pageUrl = $this->addSlash($pageUrl);
-		
+			
 			ob_end_flush();
 			ob_start();
 			ob_implicit_flush();		
 			echo '<span style="color:green;">'.$pageUrl .'</span><br>';	
 			ob_flush();
 			flush();
+
+			$this->addUrlToTable('crawled',$pageUrl);
 			
-	
-$this->addUrlToTable('crawled',$pageUrl);
-		
-		
-		
 			$page = $this->sendRequest($pageUrl);		
 			$final_url = $page['final_url'];
 			$final_url = $this->addSlash($final_url);
 			$httpCode = $page['http_code'];			
 			$buffer = $page['buffer'];
-			
-		
-			
+
 			$this->sortAndSubmit($pageUrl,$final_url,$httpCode,$buffer);
-			
-        }
+				
+		}
 
-}
-
-
-
+	}
 
 
 
@@ -1130,8 +1109,7 @@ $this->addUrlToTable('crawled',$pageUrl);
 				
 		curl_close($ch);
 			
-			
-			
+
 			
 			
 		// Close handle
