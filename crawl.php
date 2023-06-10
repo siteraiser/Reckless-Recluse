@@ -1024,7 +1024,7 @@ function stripHTML($html){
 
 			if( $this->isSameDomain($pageUrl,$final_url)){
 				//$this->urlsCrawled[]=$final_url;	
-				$this->addUrlToTable('crawled',$final_url);//seems redundant but leaving for now...
+				$this->addUrlToTable('crawled',$final_url);
 				
 				$this->start_url = 	$final_url;
 			
