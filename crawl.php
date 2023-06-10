@@ -127,7 +127,7 @@ class crawlLinks {
 	public $redirected=[];
 	public $redirectsTo=[];
 	public $otherErrors=[];
-	public $curl_timeout = 5;//5 seconds default
+	public $curl_timeout = 5000;//5 seconds default
 	public $include_dirs=[];//array('http://www.example.com/products-and-services/');//[]; 
 	public $exclude_dirs=array('https://www.siteraiser.com/book');// array('http://www.example.com/products-and-services/web-development');//[]; 
 	public $uagent ='Mozilla/5.0 (Linux; U; Android 2.2.1; en-us; MB525 Build/3.4.2-107_JDN-9) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1';
@@ -817,7 +817,7 @@ function encodeURI($url) {
 
 
 
-//function for curl multi handle from Timo Huovinen here... https://www.php.net/manual/en/function.curl-multi-exec.php#124240 
+//2 functions for curl multi handle from Timo Huovinen here... https://www.php.net/manual/en/function.curl-multi-exec.php#124240 
 //probably more complicated than it needs to be but seems to work
 	function curl_multi_exec_full($mh, &$still_running) {
 		do {
@@ -987,34 +987,8 @@ function download($urls){
 			
 			
 			
-			//should be a function...
-		if($final_url != $pageUrl && $httpCode != 404) {
-				$this->redirectsTo[$pageUrl]= $final_url;
-				$this->redirected[] = $pageUrl;						
-							
-				if( $this->isSameDomain($pageUrl,$final_url)){
-					//$this->urlsCrawled[]=$final_url;	
-					$this->addUrlToTable('crawled',$final_url);
-					
-					$this->start_url = 	$final_url;
-				
-					$this->base_url = parse_url($this->start_url, PHP_URL_SCHEME).'://'.parse_url($this->start_url, PHP_URL_HOST);//could be fucntion
-					$this->getAtts($buffer,$final_url);
-				}
-			}else if($httpCode == 404){
-				
-				if($final_url != $pageUrl){
-					$this->four04s[] = $final_url;
-					$this->redirectsTo[$pageUrl]= $final_url;
-					$this->redirected[] = $pageUrl;		
-				}else{
-					$this->four04s[] = $pageUrl;
-				}
-			}else if($buffer ==""){
-				$this->otherErrors[$pageUrl] = $httpCode;//
-			}else{
-				$this->getAtts($buffer,$pageUrl);    
-			}	
+					//Fill not found, redirect arrays, get and add attributes etc.
+					$this->sortAndSubmit($pageUrl,$final_url,$httpCode,$buffer);
 			
 	
 					//echo curl_multi_getcontent($read['handle']));
@@ -1054,34 +1028,7 @@ function download($urls){
 
 }	
 
-
-
-function downloadOneAtATime($urls){
-        foreach ($urls as $pageUrl) {   
-		
-			$pageUrl = $this->addSlash($pageUrl);
-		
-			ob_end_flush();
-			ob_start();
-			ob_implicit_flush();		
-			echo '<span style="color:green;">'.$pageUrl .'</span><br>';	
-			ob_flush();
-			flush();
-			
-	
-$this->addUrlToTable('crawled',$pageUrl);
-		
-		
-		
-			$page = $this->sendRequest($pageUrl);		
-			$final_url = $page['final_url'];
-			$final_url = $this->addSlash($final_url);
-			$httpCode = $page['http_code'];			
-			$buffer = $page['buffer'];
-			
-		
-			
-			//should be a function...
+function sortAndSubmit($pageUrl,$final_url,$httpCode,$buffer){
 			if($final_url != $pageUrl && $httpCode != 404) {
 				$this->redirectsTo[$pageUrl]= $final_url;
 				$this->redirected[] = $pageUrl;						
@@ -1111,6 +1058,40 @@ $this->addUrlToTable('crawled',$pageUrl);
 			}else{
 				$this->getAtts($buffer,$pageUrl);    
 			}
+
+}
+
+
+
+
+
+function downloadOneAtATime($urls){
+        foreach ($urls as $pageUrl) {   
+		
+			$pageUrl = $this->addSlash($pageUrl);
+		
+			ob_end_flush();
+			ob_start();
+			ob_implicit_flush();		
+			echo '<span style="color:green;">'.$pageUrl .'</span><br>';	
+			ob_flush();
+			flush();
+			
+	
+$this->addUrlToTable('crawled',$pageUrl);
+		
+		
+		
+			$page = $this->sendRequest($pageUrl);		
+			$final_url = $page['final_url'];
+			$final_url = $this->addSlash($final_url);
+			$httpCode = $page['http_code'];			
+			$buffer = $page['buffer'];
+			
+		
+			
+			$this->sortAndSubmit($pageUrl,$final_url,$httpCode,$buffer);
+			
         }
 
 }
