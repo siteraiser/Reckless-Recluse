@@ -56,7 +56,7 @@ use Laudis\Neo4j\ClientBuilder;	ClientBuilder::create()
 return n";
 	$result1 = $neo4j->run($query);
 	
-	/* If the site has main elements, you can base page rank on this instead or in addition (browse.php would likely need adjusting)
+	/* If the site has main elements, you can base page rank on this instead or in addition (shown above{group: 'mainlinks'}) or just use {group: 'a'} to use all links.
 
 	
 	MATCH (n: Url {type: 'internal'})<-[r:references]-(lto: Url {type: 'internal'})-[:has_group]->(g:Group {group: 'mainlinks'})-[:has_item]->(:Item)-[:has_property]->(links) WHERE ((links.property = 'href') AND NOT r.rel = 'nofollow')	
