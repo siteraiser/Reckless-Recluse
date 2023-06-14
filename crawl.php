@@ -873,7 +873,7 @@ function stripHTML($html){
 
 	function download($urls){
 
-		$mh = curl_multi_init();
+		$mh = curl_multi_init();//todo: maybe keep the handle open until all of the downloads are completed
 		
 		$url_resource_ids=[];
 		$chandles = [];
