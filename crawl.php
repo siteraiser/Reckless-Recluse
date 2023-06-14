@@ -127,7 +127,7 @@ class crawlLinks {
 	public $redirected=[];
 	public $redirectsTo=[];
 	public $otherErrors=[];
-	public $curl_timeout = 5000;//5 seconds default
+	public $curl_timeout = 5000;//5 seconds default... should check that this is right
 	public $include_dirs=[];//array('http://www.example.com/products-and-services/');//[]; 
 	public $exclude_dirs=array('https://www.siteraiser.com/book');// array('http://www.example.com/products-and-services/web-development');//[]; 
 	public $uagent ='Mozilla/5.0 (Linux; U; Android 2.2.1; en-us; MB525 Build/3.4.2-107_JDN-9) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1';
